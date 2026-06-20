@@ -663,12 +663,12 @@ End Function
 
 Private Function _HashCle(texte As String) As String
     Dim h1 As Double, h2 As Double
+    Dim m1 As Double, m2 As Double
+    Dim i As Long, v As Long
     h1 = 1505843#
     h2 = 1234567891#
-    Dim i As Long, v As Long
     For i = 1 To Len(texte)
         v = Asc(Mid$(texte, i, 1))
-        Dim m1 As Double, m2 As Double
         m1 = h1 - Int(h1 / 67108864#) * 67108864#
         m2 = h2 - Int(h2 / 67108864#) * 67108864#
         h1 = m1 * 31# + v
