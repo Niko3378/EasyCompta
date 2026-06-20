@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+
+  <Product Id="*"
+           Name="EasyCompta"
+           Language="1036"
+           Version="$(var.Version)"
+           Manufacturer="SEB"
+           UpgradeCode="{7A8B9C0D-1E2F-3A4B-5C6D-7E8F9A0B1C2D}">
+
+    <Package InstallerVersion="200"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Description="EasyCompta — Gestion comptable"
+             Comments="Nécessite Microsoft Excel" />
+
+    <MajorUpgrade DowngradeErrorMessage="Une version plus récente de EasyCompta est déjà installée." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Icône du produit (raccourcis + Programmes & Fonctionnalités) -->
+    <Icon Id="EasyCompta.ico" SourceFile="EasyCompta.ico" />
+    <Property Id="ARPPRODUCTICON" Value="EasyCompta.ico" />
+
+    <Feature Id="ProductFeature" Title="EasyCompta" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+
+    <UIRef Id="WixUI_InstallDir" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+
+  </Product>
+
+  <!-- Arborescence répertoires -->
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="CommonAppDataFolder">
+        <Directory Id="INSTALLDIR" Name="EasyCompta">
+          <Directory Id="PdfsFolderDir" Name="pdfs" />
+        </Directory>
+      </Directory>
+      <Directory Id="DesktopFolder" Name="Desktop" />
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="EasyCompta" />
+      </Directory>
+    </Directory>
+  </Fragment>
+
+  <!-- Composants installés -->
+  <Fragment>
+    <ComponentGroup Id="ProductComponents">
+      <ComponentRef Id="CmpExcel" />
+      <ComponentRef Id="CmpExtracteur" />
+      <ComponentRef Id="CmpManuel" />
+      <ComponentRef Id="CmpPdfsFolder" />
+      <ComponentRef Id="CmpShortcutBureau" />
+      <ComponentRef Id="CmpShortcutMenu" />
+      <ComponentRef Id="CmpTrustedLocation16" />
+      <ComponentRef Id="CmpTrustedLocation15" />
+      <ComponentRef Id="CmpInstallDirWrite" />
+    </ComponentGroup>
+
+    <!-- Classeur Excel avec macros -->
+    <DirectoryRef Id="INSTALLDIR">
+      <Component Id="CmpExcel" Guid="{2B3C4D5E-6F7A-8B9C-0D1E-2F3A4B5C6D7E}">
+        <!-- Excel doit pouvoir réécrire le p-code VBA compilé dans le fichier -->
+        <File Id="GestionComptable"
+              Source="..\EasyCompta.xlsm"
+              KeyPath="yes">
+          <util:PermissionEx User="Everyone" GenericAll="yes" />
+        </File>
+      </Component>
+
+      <!-- Extracteur PDF autonome (compilé par PyInstaller) -->
+      <Component Id="CmpExtracteur" Guid="{3C4D5E6F-7A8B-9C0D-1E2F-3A4B5C6D7E8F}">
+        <File Id="PdfExtracteur"
+              Source="..\dist\pdf_extractor.exe"
+              KeyPath="yes" />
+      </Component>
+
+      <!-- Manuel utilisateur PDF -->
+      <Component Id="CmpManuel" Guid="{6F7A8B9C-0D1E-2F3A-4B5C-6D7E8F9A0B1C}">
+        <File Id="ManuelPDF"
+              Source="..\Manuel_EasyCompta.pdf"
+              KeyPath="yes" />
+      </Component>
+
+      <!-- Permissions écriture — Excel doit pouvoir recompiler et sauvegarder le p-code VBA -->
+      <Component Id="CmpInstallDirWrite" Guid="{D4E5F6A7-B8C9-0D1E-2F3A-4B5C6D7E8F9A}">
+        <CreateFolder>
+          <util:PermissionEx User="Everyone" GenericAll="yes" />
+        </CreateFolder>
+      </Component>
+
+    </DirectoryRef>
+
+    <!-- Dossier pdfs\ pour les factures -->
+    <DirectoryRef Id="PdfsFolderDir">
+      <Component Id="CmpPdfsFolder" Guid="{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}">
+        <CreateFolder />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Emplacement approuvé Excel — HKLM pour perMachine (s'applique à tous les utilisateurs) -->
+    <DirectoryRef Id="TARGETDIR">
+      <Component Id="CmpTrustedLocation16" Guid="{B1C2D3E4-F5A6-7890-BCDE-F12345678901}">
+        <RegistryValue Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Office\16.0\Excel\Security\Trusted Locations\Location_EasyCompta"
+                       Name="Path" Type="string" Value="[INSTALLDIR]"
+                       KeyPath="yes" />
+        <RegistryValue Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Office\16.0\Excel\Security\Trusted Locations\Location_EasyCompta"
+                       Name="AllowSubFolders" Type="integer" Value="1" />
+        <RegistryValue Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Office\16.0\Excel\Security\Trusted Locations\Location_EasyCompta"
+                       Name="Description" Type="string" Value="EasyCompta" />
+      </Component>
+      <Component Id="CmpTrustedLocation15" Guid="{C2D3E4F5-A6B7-8901-CDEF-123456789012}">
+        <RegistryValue Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Office\15.0\Excel\Security\Trusted Locations\Location_EasyCompta"
+                       Name="Path" Type="string" Value="[INSTALLDIR]"
+                       KeyPath="yes" />
+        <RegistryValue Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Office\15.0\Excel\Security\Trusted Locations\Location_EasyCompta"
+                       Name="AllowSubFolders" Type="integer" Value="1" />
+        <RegistryValue Root="HKLM"
+                       Key="SOFTWARE\Microsoft\Office\15.0\Excel\Security\Trusted Locations\Location_EasyCompta"
+                       Name="Description" Type="string" Value="EasyCompta" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Raccourci Bureau -->
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="CmpShortcutBureau" Guid="{4D5E6F7A-8B9C-0D1E-2F3A-4B5C6D7E8F9A}">
+        <Shortcut Id="ShortcutBureau"
+                  Name="EasyCompta"
+                  Description="EasyCompta — Gestion comptable"
+                  Target="[INSTALLDIR]EasyCompta.xlsm"
+                  WorkingDirectory="INSTALLDIR"
+                  Icon="EasyCompta.ico"
+                  IconIndex="0" />
+        <RegistryValue Root="HKCU"
+                       Key="Software\EasyCompta"
+                       Name="DesktopShortcut"
+                       Type="integer" Value="1"
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Raccourci Menu Démarrer -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="CmpShortcutMenu" Guid="{5E6F7A8B-9C0D-1E2F-3A4B-5C6D7E8F9A0B}">
+        <Shortcut Id="ShortcutMenu"
+                  Name="EasyCompta"
+                  Description="EasyCompta — Gestion comptable"
+                  Target="[INSTALLDIR]EasyCompta.xlsm"
+                  WorkingDirectory="INSTALLDIR"
+                  Icon="EasyCompta.ico"
+                  IconIndex="0" />
+        <RemoveFolder Id="RemoveMenuFolder"
+                      Directory="ApplicationProgramsFolder"
+                      On="uninstall" />
+        <RegistryValue Root="HKCU"
+                       Key="Software\EasyCompta"
+                       Name="MenuShortcut"
+                       Type="integer" Value="1"
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+  </Fragment>
+
+</Wix>
