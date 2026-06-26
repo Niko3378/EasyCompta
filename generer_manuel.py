@@ -199,7 +199,7 @@ def generer():
     pdf.set_font(FONT, 'I', 9)
     pdf.set_text_color(150, 150, 150)
     pdf.set_xy(0, 220)
-    pdf.cell(210, 7, 'Version 1.0  —  2026', align='C',
+    pdf.cell(210, 7, 'Version 1.2.0  —  2026', align='C',
              new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     # PayPal mention
