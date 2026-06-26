@@ -2,6 +2,23 @@
 setlocal EnableDelayedExpansion
 cd /d "%~dp0"
 
+:: -- Auto-logging ------------------------------------------------------------
+:: Premier appel : relance le bat en capturant stdout->build_log.txt et stderr->build_err.txt
+if not defined BUILD_LOGGING (
+    set BUILD_LOGGING=1
+    del /q build_log.txt build_err.txt 2>nul
+    call "%~f0" > build_log.txt 2> build_err.txt
+    set BUILD_EXIT=!errorlevel!
+    type build_log.txt
+    if !BUILD_EXIT! neq 0 (
+        echo.
+        echo [ECHEC] Details des erreurs ^(build_err.txt^) :
+        type build_err.txt
+    )
+    pause
+    exit /b !BUILD_EXIT!
+)
+
 :: -- Version du produit -------------------------------------------------------
 set VERSION=1.2.0
 set VERSION_WIX=%VERSION%.0
@@ -15,11 +32,11 @@ echo.
 :: -- Etape 0 : verifier les fichiers sources --------------------------------
 if not exist "EasyCompta.xlsx" (
     echo [ERREUR] EasyCompta.xlsx introuvable dans %~dp0
-    pause & exit /b 1
+    exit /b 1
 )
 if not exist "vba_Comptabilite.bas" (
     echo [ERREUR] vba_Comptabilite.bas introuvable dans %~dp0
-    pause & exit /b 1
+    exit /b 1
 )
 echo [OK] Fichiers sources trouves.
 
@@ -31,7 +48,7 @@ python --version >nul 2>&1
 if errorlevel 1 (
     echo [ERREUR] Python introuvable dans le PATH.
     echo Installez Python 3.10+ depuis python.org
-    pause & exit /b 1
+    exit /b 1
 )
 
 pip install pywin32 fpdf2 pyinstaller --quiet 2>&1
@@ -58,11 +75,11 @@ if errorlevel 1 (
     echo     ^> Parametres du centre de gestion de la confidentialite
     echo     ^> Parametres des macros ^> cochez "Approbation acces au modele d'objet VBA"
     echo.
-    pause & exit /b 1
+    exit /b 1
 )
 if not exist "EasyCompta.xlsm" (
     echo [ERREUR] EasyCompta.xlsm non cree apres integration VBA.
-    pause & exit /b 1
+    exit /b 1
 )
 echo [OK] EasyCompta.xlsm cree avec VBA integre.
 
@@ -72,11 +89,11 @@ echo [3/5] Generation du manuel utilisateur PDF...
 python generer_manuel.py
 if errorlevel 1 (
     echo [ERREUR] Echec de la generation du PDF.
-    pause & exit /b 1
+    exit /b 1
 )
 if not exist "Manuel_EasyCompta.pdf" (
     echo [ERREUR] Manuel_EasyCompta.pdf non cree.
-    pause & exit /b 1
+    exit /b 1
 )
 echo [OK] Manuel_EasyCompta.pdf genere.
 
@@ -88,11 +105,11 @@ echo.
 pyinstaller --clean pdf_extractor.spec
 if errorlevel 1 (
     echo [ERREUR] Echec de PyInstaller.
-    pause & exit /b 1
+    exit /b 1
 )
 if not exist "dist\pdf_extractor.exe" (
     echo [ERREUR] dist\pdf_extractor.exe introuvable apres compilation.
-    pause & exit /b 1
+    exit /b 1
 )
 echo [OK] dist\pdf_extractor.exe cree.
 
@@ -134,7 +151,7 @@ cd installer
 %CANDLE% EasyCompta.wxs -ext WixUtilExtension -dVersion=%VERSION_WIX% -out EasyCompta.wixobj -arch x64
 if errorlevel 1 (
     echo [ERREUR] Echec candle.exe
-    cd .. & pause & exit /b 1
+    cd .. & exit /b 1
 )
 
 set MSI_OUT=EasyCompta_v%VERSION%.msi
@@ -143,7 +160,7 @@ if exist "%MSI_OUT%" del /q "%MSI_OUT%" 2>nul
 %LIGHT% EasyCompta.wixobj -ext WixUIExtension -ext WixUtilExtension -cultures:fr-fr -sice:ICE38 -out "%MSI_OUT%"
 if errorlevel 1 (
     echo [ERREUR] Echec light.exe
-    cd .. & pause & exit /b 1
+    cd .. & exit /b 1
 )
 
 del /q EasyCompta.wixobj 2>nul
@@ -163,4 +180,3 @@ echo   - Manuel_EasyCompta.pdf ^(guide utilisateur complet^)
 echo   - Raccourci Bureau + Menu Demarrer
 echo   - Python non requis sur la machine cible
 echo.
-pause
