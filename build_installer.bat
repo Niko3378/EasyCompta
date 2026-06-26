@@ -2,17 +2,17 @@
 setlocal EnableDelayedExpansion
 cd /d "%~dp0"
 
-:: ── Version du produit ───────────────────────────────────────────────────────
+:: -- Version du produit -------------------------------------------------------
 set VERSION=1.2.0
 set VERSION_WIX=%VERSION%.0
 
 echo.
 echo ============================================================
-echo   BUILD  ^|  EasyCompta v%VERSION% — Installateur .msi
+echo   BUILD  ^|  EasyCompta v%VERSION% - Installateur .msi
 echo ============================================================
 echo.
 
-:: ── Étape 0 : vérifier les fichiers sources ────────────────────────────────
+:: -- Etape 0 : verifier les fichiers sources --------------------------------
 if not exist "EasyCompta.xlsx" (
     echo [ERREUR] EasyCompta.xlsx introuvable dans %~dp0
     pause & exit /b 1
@@ -23,7 +23,7 @@ if not exist "vba_Comptabilite.bas" (
 )
 echo [OK] Fichiers sources trouves.
 
-:: ── Étape 1 : vérifier Python + dépendances ───────────────────────────────
+:: -- Etape 1 : verifier Python + dependances -------------------------------
 echo.
 echo [1/5] Verification de Python et des dependances...
 
@@ -41,7 +41,7 @@ if errorlevel 1 (
 )
 echo [OK] Dependances Python verifiees.
 
-:: ── Étape 2 : intégration VBA automatique → crée EasyCompta.xlsm ──
+:: -- Etape 2 : integration VBA automatique -> cree EasyCompta.xlsm --
 echo.
 echo [2/5] Integration VBA automatique ^(via Excel COM^)...
 echo       Excel va s'ouvrir brievement en arriere-plan.
@@ -66,7 +66,7 @@ if not exist "EasyCompta.xlsm" (
 )
 echo [OK] EasyCompta.xlsm cree avec VBA integre.
 
-:: ── Étape 3 : génération du manuel PDF ────────────────────────────────────
+:: -- Etape 3 : generation du manuel PDF ------------------------------------
 echo.
 echo [3/5] Generation du manuel utilisateur PDF...
 python generer_manuel.py
@@ -80,10 +80,10 @@ if not exist "Manuel_EasyCompta.pdf" (
 )
 echo [OK] Manuel_EasyCompta.pdf genere.
 
-:: ── Étape 4 : compiler pdf_extractor.exe ──────────────────────────────────
+:: -- Etape 4 : compiler pdf_extractor.exe ----------------------------------
 echo.
 echo [4/5] Compilation de pdf_extractor.exe ^(PyInstaller --onefile^)...
-echo       Cette etape peut prendre 2 a 5 minutes — patientez.
+echo       Cette etape peut prendre 2 a 5 minutes - patientez.
 echo.
 pyinstaller --clean pdf_extractor.spec
 if errorlevel 1 (
@@ -96,7 +96,7 @@ if not exist "dist\pdf_extractor.exe" (
 )
 echo [OK] dist\pdf_extractor.exe cree.
 
-:: ── Étape 5 : compiler le MSI ─────────────────────────────────────────────
+:: -- Etape 5 : compiler le MSI ---------------------------------------------
 echo.
 echo [5/5] Compilation du MSI ^(WiX Toolset^)...
 
