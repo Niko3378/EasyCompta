@@ -19,8 +19,8 @@ if not defined BUILD_LOGGING (
     exit /b !BUILD_EXIT!
 )
 
-:: -- Version du produit -------------------------------------------------------
-set VERSION=1.2.0
+:: -- Version du produit (lue depuis version.txt) ------------------------------
+for /f "usebackq tokens=*" %%v in ("version.txt") do set VERSION=%%v
 set VERSION_WIX=%VERSION%.0
 
 echo.

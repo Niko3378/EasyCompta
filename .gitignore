@@ -1,18 +1,19 @@
 # Build artifacts
 build/
+build_log.txt
+build_err.txt
+install_test.log
+
+# WiX temp files
+installer/*.wixobj
+installer/*.wixpdb
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
 
-# Logs et fichiers temporaires
-build_log.txt
-build_err.txt
-install_test.log
-test_vba_sim.json
-%TEMP%/
-
-# WiX intermédiaires
-installer/*.wixobj
-
-# Claude
-.claude/
+# Temp files
+extraction_temp.json
+*.tmp
+*.bak

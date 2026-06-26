@@ -488,13 +488,16 @@ Private Function _FichierExiste(chemin As String) As Boolean
     _FichierExiste = (Len(Dir(chemin)) > 0)
 End Function
 
-' Lecture d'un fichier texte complet
+' Lecture d'un fichier texte UTF-8 (JSON produit par pdf_extractor.py)
 Private Function _LireTexte(chemin As String) As String
-    Dim num As Integer
-    num = FreeFile
-    Open chemin For Input As #num
-    _LireTexte = Input(LOF(num), num)
-    Close #num
+    Dim ado As Object
+    Set ado = CreateObject("ADODB.Stream")
+    ado.Charset = "utf-8"
+    ado.Open
+    ado.LoadFromFile chemin
+    _LireTexte = ado.ReadText
+    ado.Close
+    Set ado = Nothing
 End Function
 
 ' Extrait la valeur d'une clé dans un JSON simple (pas de tableaux imbriqués)
@@ -598,8 +601,13 @@ End Sub
 '  SECTION 7 - LICENCE
 ' ============================================================
 
-Private Const SECRET_LICENCE As String = "SEB$C0mpt4bl3#Pr0j3t9!"
 Private Const REG_PATH        As String = "HKCU\Software\EasyCompta\"
+
+Private Function _GetSecret() As String
+    Dim p1 As String, p2 As String, p3 As String, p4 As String, p5 As String
+    p1 = "SEB$" : p2 = "C0mpt" : p3 = "4bl3#" : p4 = "Pr0j3" : p5 = "t9!"
+    _GetSecret = p1 & p2 & p3 & p4 & p5
+End Function
 
 Public Sub VerifierOuDemanderLicence()
     Dim wsh As Object
@@ -656,7 +664,7 @@ Private Function _VerifierLicence(cle As String, email As String) As Boolean
     hashCle = Mid$(cle, 10, 4) & Mid$(cle, 15, 4)
 
     Dim expected As String
-    expected = _HashCle(LCase(Trim(email)) & SECRET_LICENCE)
+    expected = _HashCle(LCase(Trim(email)) & _GetSecret())
 
     _VerifierLicence = (hashCle = Left$(expected, 8))
 End Function

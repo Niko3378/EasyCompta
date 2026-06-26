@@ -285,7 +285,7 @@ def main():
         donnees = {'succes': False, 'erreur': f"Erreur inattendue : {exc}", 'type_facture': ''}
 
     os.makedirs(os.path.dirname(os.path.abspath(fichier_json)), exist_ok=True)
-    with open(fichier_json, 'w', encoding='cp1252') as f:
+    with open(fichier_json, 'w', encoding='utf-8') as f:
         json.dump(donnees, f, ensure_ascii=False, indent=2)
 
     # Signal de fin lisible par VBA

@@ -19,8 +19,10 @@ _FONTS = {
 }
 FONT = 'Arial'
 
-BASE   = os.path.dirname(os.path.abspath(__file__))
-SORTIE = os.path.join(BASE, "Manuel_EasyCompta.pdf")
+BASE    = os.path.dirname(os.path.abspath(__file__))
+SORTIE  = os.path.join(BASE, "Manuel_EasyCompta.pdf")
+with open(os.path.join(BASE, "version.txt")) as _vf:
+    VERSION_APP = _vf.read().strip()
 
 # ── Palette ──────────────────────────────────────────────────────────────────
 C_BLEU    = (31,  78, 121)
@@ -199,7 +201,7 @@ def generer():
     pdf.set_font(FONT, 'I', 9)
     pdf.set_text_color(150, 150, 150)
     pdf.set_xy(0, 220)
-    pdf.cell(210, 7, 'Version 1.2.0  —  2026', align='C',
+    pdf.cell(210, 7, f'Version {VERSION_APP}  —  2026', align='C',
              new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     # PayPal mention
