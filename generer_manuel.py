@@ -66,7 +66,7 @@ class ManuelPDF(FPDF):
         self.set_y(-15)
         self.set_font(FONT, 'I', 7)
         self.set_text_color(150, 150, 150)
-        self.cell(0, 6, 'EasyCompta — Logiciel gratuit — https://paypal.me/SEB', align='C')
+        self.cell(0, 6, 'EasyCompta — Logiciel gratuit — https://paypal.me/NLaurent878', align='C')
         self.set_text_color(*C_TEXTE)
 
     # ── Helpers de mise en forme ─────────────────────────────────────────────
@@ -214,7 +214,7 @@ def generer():
              new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_font(FONT, '', 9)
     pdf.set_xy(40, 260)
-    pdf.cell(130, 6, 'paypal.me/SEB', align='C')
+    pdf.cell(130, 6, 'paypal.me/NLaurent878', align='C')
 
     # ─────────────────────────────────────────────────────────────────────────
     # PAGE 2 — Sommaire
@@ -568,7 +568,7 @@ def generer():
              new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_font(FONT, '', 12)
     pdf.set_xy(30, pdf.get_y() + 2)
-    pdf.cell(150, 8, 'https://paypal.me/SEB', align='C',
+    pdf.cell(150, 8, 'https://paypal.me/NLaurent878', align='C',
              new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_text_color(*C_TEXTE)
     pdf.ln(6)
