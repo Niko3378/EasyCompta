@@ -65,6 +65,7 @@ THISWORKBOOK_CODE = """\
 Option Explicit
 
 Private Sub Workbook_Open()
+    Mod_Comptabilite.Setup_Boutons
     Mod_Comptabilite.VerifierOuDemanderLicence
 End Sub
 
