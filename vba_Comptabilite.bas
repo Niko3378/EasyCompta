@@ -624,14 +624,31 @@ Public Sub VerifierOuDemanderLicence()
         Exit Sub
     End If
 
+    ' Incrémenter le compteur d'ouvertures
+    Dim count As Long
+    On Error Resume Next
+    count = CLng(wsh.RegRead(REG_PATH & "\OpenCount"))
+    On Error GoTo 0
+    count = count + 1
+    wsh.RegWrite REG_PATH & "\OpenCount", count, "REG_DWORD"
+
+    ' Popup don toutes les 5 ouvertures (1re, 6e, 11e...)
+    If count Mod 5 <> 1 Then Exit Sub
+
     Dim rep As Integer
     rep = MsgBox("Merci d'utiliser EasyCompta !" & vbCrLf & vbCrLf & _
                  "Ce logiciel est libre et gratuit." & vbCrLf & _
-                 "Si vous souhaitez soutenir le projet, un don PayPal" & vbCrLf & _
-                 "vous permet d'obtenir une cle d'activation." & vbCrLf & vbCrLf & _
-                 "Voulez-vous entrer votre cle de licence maintenant ?", _
-                 vbQuestion + vbYesNo, "Activation EasyCompta")
+                 "Si vous souhaitez soutenir le projet," & vbCrLf & _
+                 "un don PayPal vous permet d'obtenir une cle d'activation." & vbCrLf & vbCrLf & _
+                 "Voulez-vous faire un don maintenant ?", _
+                 vbQuestion + vbYesNo, "Soutenir EasyCompta")
 
+    If rep = vbYes Then
+        wsh.Run "cmd /c start https://paypal.me/NLaurent878", 0, False
+    End If
+
+    rep = MsgBox("Avez-vous deja une cle de licence ?", _
+                 vbQuestion + vbYesNo, "Activation EasyCompta")
     If rep = vbNo Then Exit Sub
 
     Do
