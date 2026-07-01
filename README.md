@@ -1,4 +1,4 @@
-# EasyCompta v1.2.0
+# EasyCompta v2.0.0
 
 Système de gestion comptable automatisé pour TPE/indépendants — Excel + VBA + Python.
 
@@ -12,7 +12,7 @@ Système de gestion comptable automatisé pour TPE/indépendants — Excel + VBA
 
 ## Installation
 
-Téléchargez et exécutez `EasyCompta_v1.2.0.msi` (aucune installation de Python requise).
+Téléchargez et exécutez `EasyCompta_v2.0.0.msi` (aucune installation de Python requise).
 
 L'installateur crée :
 - Un raccourci Bureau et Menu Démarrer
@@ -52,7 +52,7 @@ pip install openpyxl pdfplumber pypdf pywin32 fpdf2 pyinstaller
 build_installer.bat
 ```
 
-Produit `installer\EasyCompta_v1.2.0.msi` en 5 étapes :
+Produit `installer\EasyCompta_v2.0.0.msi` en 5 étapes :
 1. Vérification des dépendances Python
 2. Intégration VBA dans `EasyCompta.xlsm` via Excel COM
 3. Génération du manuel PDF
