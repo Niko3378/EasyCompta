@@ -26,20 +26,23 @@ Private Const CLR_ROUGE      As Long = 12517376   ' #C00000
 Private Const CLR_ORANGE     As Long = 12905233   ' #C55A11
 Private Const CLR_VIOLET     As Long = 7340032    ' #7030A0
 
+' Licence
+Private Const REG_PATH        As String = "HKCU\Software\EasyCompta"
+
 
 ' ============================================================
-'  SECTION 1 — SETUP INITIAL
+'  SECTION 1 - SETUP INITIAL
 ' ============================================================
 
 Public Sub Setup_Boutons()
     Application.ScreenUpdating = False
     On Error GoTo ErrHandler
 
-    Call _Creer_Boutons_PDF_Import
-    Call _Creer_Bouton_DB(SH_FOURN,   "Ouvrir_PDF_Ligne",  "Ouvrir PDF",       "D1", CLR_BLEU_FONCE, 120, 26)
-    Call _Creer_Bouton_DB(SH_CLIENTS, "Ouvrir_PDF_Ligne",  "Ouvrir PDF",       "D1", CLR_VERT,        120, 26)
-    Call _Creer_Bouton_Pivot
-    Call _Creer_Bouton_TVA
+    Call Creer_Boutons_PDF_Import
+    Call Creer_Bouton_DB(SH_FOURN,   "Ouvrir_PDF_Ligne",  "Ouvrir PDF",       "D1", CLR_BLEU_FONCE, 120, 26)
+    Call Creer_Bouton_DB(SH_CLIENTS, "Ouvrir_PDF_Ligne",  "Ouvrir PDF",       "D1", CLR_VERT,        120, 26)
+    Call Creer_Bouton_Pivot
+    Call Creer_Bouton_TVA
 
     Application.ScreenUpdating = True
     MsgBox "Configuration terminée !" & vbCrLf & _
@@ -53,7 +56,7 @@ End Sub
 
 ' -- Boutons feuille PDF_Import ------------------------------------------------
 
-Private Sub _Creer_Boutons_PDF_Import()
+Private Sub Creer_Boutons_PDF_Import()
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Sheets(SH_PDF)
 
@@ -71,24 +74,24 @@ Private Sub _Creer_Boutons_PDF_Import()
     Dim leftC  As Double : leftC  = ws.Range("C19").Left
 
     ' Bouton Importer PDF
-    _AjouterBouton ws, "btn_ImporterPDF", "Importer PDF", _
+    AjouterBouton ws, "btn_ImporterPDF", "Importer PDF", _
         leftD5, topD5, 140, 26, CLR_BLEU_FONCE, "Mod_Comptabilite.ImporterPDF"
 
     ' Bouton Extraire données
-    _AjouterBouton ws, "btn_Extraire", "Extraire donnees", _
+    AjouterBouton ws, "btn_Extraire", "Extraire donnees", _
         leftB, top19, 145, 34, CLR_BLEU_MOY, "Mod_Comptabilite.ExtraireViaPython"
 
     ' Bouton Envoyer vers base
-    _AjouterBouton ws, "btn_Envoyer", "Envoyer vers base", _
+    AjouterBouton ws, "btn_Envoyer", "Envoyer vers base", _
         leftC, top19, 145, 34, CLR_VERT, "Mod_Comptabilite.EnvoyerVersBase"
 
     ' Bouton Mode d'emploi
     Dim leftD19 As Double : leftD19 = ws.Range("D19").Left
-    _AjouterBouton ws, "btn_Manuel", "Mode d'emploi", _
+    AjouterBouton ws, "btn_Manuel", "Mode d'emploi", _
         leftD19, top19, 130, 34, CLR_VIOLET, "Mod_Comptabilite.Ouvrir_Manuel"
 End Sub
 
-Private Sub _Creer_Bouton_DB(nom_feuille As String, action As String, label As String, _
+Private Sub Creer_Bouton_DB(nom_feuille As String, action As String, label As String, _
                                cellule As String, couleur As Long, larg As Double, haut As Double)
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Sheets(nom_feuille)
@@ -96,35 +99,35 @@ Private Sub _Creer_Bouton_DB(nom_feuille As String, action As String, label As S
     For Each shp In ws.Shapes
         If shp.Name = "btn_" & nom_feuille Then shp.Delete
     Next shp
-    _AjouterBouton ws, "btn_" & nom_feuille, label, _
+    AjouterBouton ws, "btn_" & nom_feuille, label, _
         ws.Range(cellule).Left, ws.Range(cellule).Top, larg, haut, couleur, "Mod_Comptabilite." & action
 End Sub
 
-Private Sub _Creer_Bouton_Pivot()
+Private Sub Creer_Bouton_Pivot()
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Sheets(SH_PIVOT)
     Dim shp As Shape
     For Each shp In ws.Shapes
         If Left(shp.Name, 4) = "btn_" Then shp.Delete
     Next shp
-    _AjouterBouton ws, "btn_Rafraichir", "Rafraichir tableaux", _
+    AjouterBouton ws, "btn_Rafraichir", "Rafraichir tableaux", _
         ws.Range("A20").Left, ws.Range("A20").Top, 180, 30, CLR_BLEU_FONCE, "Mod_Comptabilite.RafraichirTableaux"
 End Sub
 
-Private Sub _Creer_Bouton_TVA()
+Private Sub Creer_Bouton_TVA()
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Sheets(SH_TVA)
     Dim shp As Shape
     For Each shp In ws.Shapes
         If Left(shp.Name, 4) = "btn_" Then shp.Delete
     Next shp
-    _AjouterBouton ws, "btn_CalcTVA", "Recalculer TVA", _
+    AjouterBouton ws, "btn_CalcTVA", "Recalculer TVA", _
         ws.Range("E3").Left, ws.Range("E3").Top, 160, 30, CLR_ROUGE, "Mod_Comptabilite.RecalculerTVA"
 End Sub
 
 ' -- Fonction générique de création de bouton ----------------------------------
 
-Private Sub _AjouterBouton(ws As Worksheet, nom As String, label As String, _
+Private Sub AjouterBouton(ws As Worksheet, nom As String, label As String, _
     Left As Double, Top As Double, larg As Double, haut As Double, _
     couleur As Long, action As String)
 
@@ -157,7 +160,7 @@ End Sub
 
 
 ' ============================================================
-'  SECTION 2 — IMPORTATION PDF
+'  SECTION 2 - IMPORTATION PDF
 ' ============================================================
 
 Public Sub ImporterPDF()
@@ -173,11 +176,11 @@ Public Sub ImporterPDF()
 
     ' Stocker chemin et réinitialiser les champs
     ws.Range("B5") = CStr(chemin)
-    _Vider_Champs_Import ws
-    _Statut ws, "Fichier sélectionné. Cliquez sur « Extraire données ».", "bleu"
+    Vider_Champs_Import ws
+    Statut ws, "Fichier sélectionné. Cliquez sur « Extraire données ».", "bleu"
 End Sub
 
-Private Sub _Vider_Champs_Import(ws As Worksheet)
+Private Sub Vider_Champs_Import(ws As Worksheet)
     Dim i As Integer
     For i = 9 To 15
         ws.Cells(i, 2).Value = ""
@@ -197,12 +200,12 @@ Public Sub ExtraireViaPython()
         Exit Sub
     End If
 
-    If Not _FichierExiste(cheminPDF) Then
+    If Not FichierExiste(cheminPDF) Then
         MsgBox "Le fichier n'existe plus :" & vbCrLf & cheminPDF, vbCritical, "Fichier introuvable"
         Exit Sub
     End If
 
-    _Statut ws, "Extraction en cours… (patienter)", "orange"
+    Statut ws, "Extraction en cours… (patienter)", "orange"
     Application.StatusBar = "Extraction PDF en cours…"
     DoEvents
 
@@ -212,46 +215,46 @@ Public Sub ExtraireViaPython()
 
     ' Exécuter Python
     Dim retour As Integer
-    retour = _LancerPython(cheminPDF, jsonPath)
+    retour = LancerPython(cheminPDF, jsonPath)
 
-    If retour <> 0 Or Not _FichierExiste(jsonPath) Then
-        _Statut ws, "Échec de l'extraction. Vérifiez que Python est installé (voir Guide).", "rouge"
+    If retour <> 0 Or Not FichierExiste(jsonPath) Then
+        Statut ws, "Échec de l'extraction. Vérifiez que Python est installé (voir Guide).", "rouge"
         Application.StatusBar = False
         Exit Sub
     End If
 
     ' Lire résultats JSON
     Dim json As String
-    json = _LireTexte(jsonPath)
+    json = LireTexte(jsonPath)
 
     Dim succes As Boolean
-    succes = (_JSONVal(json, "succes") = "True" Or _JSONVal(json, "succes") = "true")
+    succes = (JSONVal(json, "succes") = "True" Or JSONVal(json, "succes") = "true")
 
     If Not succes Then
         Dim msg As String
-        msg = _JSONVal(json, "erreur")
-        _Statut ws, "Erreur : " & msg, "rouge"
+        msg = JSONVal(json, "erreur")
+        Statut ws, "Erreur : " & msg, "rouge"
         Application.StatusBar = False
         Exit Sub
     End If
 
     ' Remplir les champs de sortie
-    ws.Range("B9").Value  = _JSONVal(json, "numero_facture")
-    ws.Range("B10").Value = _JSONVal(json, "date_emission")
-    ws.Range("B11").Value = CDbl_FR(_JSONVal(json, "montant_ht"))
-    ws.Range("B12").Value = CDbl_FR(_JSONVal(json, "montant_tva"))
-    ws.Range("B13").Value = CDbl_FR(_JSONVal(json, "montant_ttc"))
-    ws.Range("B14").Value = CDbl_FR(_JSONVal(json, "taux_tva"))
-    ws.Range("B15").Value = _JSONVal(json, "type_facture")
+    ws.Range("B9").Value  = JSONVal(json, "numero_facture")
+    ws.Range("B10").Value = JSONVal(json, "date_emission")
+    ws.Range("B11").Value = CDbl_FR(JSONVal(json, "montant_ht"))
+    ws.Range("B12").Value = CDbl_FR(JSONVal(json, "montant_tva"))
+    ws.Range("B13").Value = CDbl_FR(JSONVal(json, "montant_ttc"))
+    ws.Range("B14").Value = CDbl_FR(JSONVal(json, "taux_tva"))
+    ws.Range("B15").Value = JSONVal(json, "type_facture")
 
     ' Afficher avertissements éventuels
     Dim averts As String
-    averts = _JSONVal(json, "avertissements")
+    averts = JSONVal(json, "avertissements")
 
     Dim msg2 As String
-    msg2 = "Extraction réussie (" & _JSONVal(json, "moteur_pdf") & ")."
+    msg2 = "Extraction réussie (" & JSONVal(json, "moteur_pdf") & ")."
     If Len(averts) > 5 Then msg2 = msg2 & vbCrLf & "[!] " & averts
-    _Statut ws, msg2, "vert"
+    Statut ws, msg2, "vert"
     Application.StatusBar = False
 End Sub
 
@@ -287,18 +290,18 @@ Public Sub EnvoyerVersBase()
 
     ' Trouver la première ligne vide
     Dim derLigne As Long
-    derLigne = _DerniereLigne(wsDest) + 1
+    derLigne = DerniereLigne(wsDest) + 1
 
     ' Générer ID facture
     Dim idFacture As String
-    idFacture = _GenererID(wsDest, Left(cibleSheet, 1))  ' "F" ou "C"
+    idFacture = GenererID(wsDest, Left(cibleSheet, 1))  ' "F" ou "C"
 
     ' Écrire les données
     With wsDest
         .Cells(derLigne, 1).Value  = idFacture
         .Cells(derLigne, 2).Value  = ""                                   ' Nom fourn/client (à saisir)
         .Cells(derLigne, 3).Value  = ws.Range("B9").Value                 ' Numéro facture
-        .Cells(derLigne, 4).Value  = _ConvertirDate(ws.Range("B10").Value)' Date émission
+        .Cells(derLigne, 4).Value  = ConvertirDate(ws.Range("B10").Value)' Date émission
         .Cells(derLigne, 5).Value  = CDbl_FR(ws.Range("B11").Value)       ' HT
         .Cells(derLigne, 6).Value  = CDbl_FR(ws.Range("B12").Value)       ' TVA
         .Cells(derLigne, 7).Value  = CDbl_FR(ws.Range("B13").Value)       ' TTC
@@ -316,7 +319,7 @@ Public Sub EnvoyerVersBase()
         Next col
     End With
 
-    _Statut ws, "[OK] Enregistre dans " & cibleSheet & " (ligne " & derLigne & ", ID : " & idFacture & ").", "vert"
+    Statut ws, "[OK] Enregistre dans " & cibleSheet & " (ligne " & derLigne & ", ID : " & idFacture & ").", "vert"
 
     ' Proposer rafraîchissement
     If MsgBox("Données enregistrées." & vbCrLf & _
@@ -328,7 +331,7 @@ End Sub
 
 
 ' ============================================================
-'  SECTION 3 — RAFRAÎCHISSEMENT ET TVA
+'  SECTION 3 - RAFRAICHISSEMENT ET TVA
 ' ============================================================
 
 Public Sub RafraichirTableaux()
@@ -357,7 +360,7 @@ End Sub
 
 
 ' ============================================================
-'  SECTION 4 — OUVERTURE PDF DEPUIS LES BASES
+'  SECTION 4 - OUVERTURE PDF DEPUIS LES BASES
 ' ============================================================
 
 Public Sub Ouvrir_PDF_Ligne()
@@ -388,7 +391,7 @@ Public Sub Ouvrir_PDF_Ligne()
         Exit Sub
     End If
 
-    If Not _FichierExiste(cheminPDF) Then
+    If Not FichierExiste(cheminPDF) Then
         MsgBox "Fichier introuvable :" & vbCrLf & cheminPDF, vbCritical, "Fichier manquant"
         Exit Sub
     End If
@@ -401,7 +404,7 @@ Public Sub Ouvrir_Manuel()
     Dim pdfPath As String
     pdfPath = ThisWorkbook.Path & "\Manuel_EasyCompta.pdf"
 
-    If Not _FichierExiste(pdfPath) Then
+    If Not FichierExiste(pdfPath) Then
         MsgBox "Manuel introuvable :" & vbCrLf & pdfPath, vbExclamation, "Fichier manquant"
         Exit Sub
     End If
@@ -413,13 +416,13 @@ End Sub
 
 
 ' ============================================================
-'  SECTION 6 — UTILITAIRES INTERNES
+'  SECTION 6 - UTILITAIRES INTERNES
 ' ============================================================
 
 ' Lance l'extracteur PDF et attend la fin.
 ' Priorité 1 : pdf_extractor.exe (version installée via MSI, sans Python requis)
 ' Priorité 2 : pdf_extractor.py via Python (mode développement)
-Private Function _LancerPython(cheminPDF As String, jsonSortie As String) As Integer
+Private Function LancerPython(cheminPDF As String, jsonSortie As String) As Integer
     Dim scriptDir As String
     scriptDir = ThisWorkbook.Path
 
@@ -431,30 +434,30 @@ Private Function _LancerPython(cheminPDF As String, jsonSortie As String) As Int
     ' -- Priorité 1 : exe autonome --
     Dim exePath As String
     exePath = scriptDir & "\pdf_extractor.exe"
-    If _FichierExiste(exePath) Then
+    If FichierExiste(exePath) Then
         cmd = """" & exePath & """ """ & cheminPDF & """ """ & jsonSortie & """"
-        _LancerPython = wsh.Run("cmd /c " & cmd, 0, True)
+        LancerPython = wsh.Run("cmd /c " & cmd, 0, True)
         Exit Function
     End If
 
     ' -- Priorité 2 : script Python (mode développement) --
     Dim python As String
-    python = _TrouverPython()
+    python = TrouverPython()
     If python = "" Then
         MsgBox "Extracteur PDF introuvable." & vbCrLf & vbCrLf & _
                "Solution 1 : Installez EasyCompta via l'installateur .msi" & vbCrLf & _
                "Solution 2 : Installez Python 3.10+ et cochez « Add Python to PATH ».", _
                vbCritical, "Extracteur manquant"
-        _LancerPython = 1
+        LancerPython = 1
         Exit Function
     End If
 
     cmd = """" & python & """ """ & scriptDir & "\" & SCRIPT_PDF & """ " & _
           """" & cheminPDF & """ """ & jsonSortie & """"
-    _LancerPython = wsh.Run("cmd /c " & cmd, 0, True)
+    LancerPython = wsh.Run("cmd /c " & cmd, 0, True)
 End Function
 
-Private Function _TrouverPython() As String
+Private Function TrouverPython() As String
     Dim candidats As Variant
     candidats = Array("python", "python3", _
         "C:\Python313\python.exe", "C:\Python312\python.exe", _
@@ -468,40 +471,40 @@ Private Function _TrouverPython() As String
     Set wsh = CreateObject("WScript.Shell")
     Dim c As Variant
     For Each c In candidats
-        If _FichierExiste(CStr(c)) Or _TestCommande(CStr(c)) Then
-            _TrouverPython = CStr(c)
+        If FichierExiste(CStr(c)) Or TestCommande(CStr(c)) Then
+            TrouverPython = CStr(c)
             Exit Function
         End If
     Next c
-    _TrouverPython = ""
+    TrouverPython = ""
 End Function
 
-Private Function _TestCommande(cmd As String) As Boolean
+Private Function TestCommande(cmd As String) As Boolean
     On Error Resume Next
     Dim wsh As Object
     Set wsh = CreateObject("WScript.Shell")
-    _TestCommande = (wsh.Run("cmd /c " & cmd & " --version >nul 2>&1", 0, True) = 0)
+    TestCommande = (wsh.Run("cmd /c " & cmd & " --version >nul 2>&1", 0, True) = 0)
     On Error GoTo 0
 End Function
 
-Private Function _FichierExiste(chemin As String) As Boolean
-    _FichierExiste = (Len(Dir(chemin)) > 0)
+Private Function FichierExiste(chemin As String) As Boolean
+    FichierExiste = (Len(Dir(chemin)) > 0)
 End Function
 
 ' Lecture d'un fichier texte UTF-8 (JSON produit par pdf_extractor.py)
-Private Function _LireTexte(chemin As String) As String
+Private Function LireTexte(chemin As String) As String
     Dim ado As Object
     Set ado = CreateObject("ADODB.Stream")
     ado.Charset = "utf-8"
     ado.Open
     ado.LoadFromFile chemin
-    _LireTexte = ado.ReadText
+    LireTexte = ado.ReadText
     ado.Close
     Set ado = Nothing
 End Function
 
 ' Extrait la valeur d'une clé dans un JSON simple (pas de tableaux imbriqués)
-Private Function _JSONVal(json As String, cle As String) As String
+Private Function JSONVal(json As String, cle As String) As String
     Dim re As Object
     Set re = CreateObject("VBScript.RegExp")
 
@@ -509,18 +512,18 @@ Private Function _JSONVal(json As String, cle As String) As String
     re.Pattern = """" & cle & """\s*:\s*""([^""]*)"""
     re.IgnoreCase = True
     If re.Test(json) Then
-        _JSONVal = re.Execute(json)(0).SubMatches(0)
+        JSONVal = re.Execute(json)(0).SubMatches(0)
         Exit Function
     End If
 
     ' Cherche "cle": valeur_numerique_ou_booleen
     re.Pattern = """" & cle & """\s*:\s*([^,\}\[\n]+)"
     If re.Test(json) Then
-        _JSONVal = Trim(re.Execute(json)(0).SubMatches(0))
+        JSONVal = Trim(re.Execute(json)(0).SubMatches(0))
         Exit Function
     End If
 
-    _JSONVal = ""
+    JSONVal = ""
 End Function
 
 ' Convertit un string en Double (supporte , et . comme séparateurs)
@@ -546,43 +549,43 @@ Private Function CDbl_FR(valeur As Variant) As Double
 End Function
 
 ' Convertit une date texte JJ/MM/AAAA en Date Excel
-Private Function _ConvertirDate(valeur As String) As Variant
+Private Function ConvertirDate(valeur As String) As Variant
     On Error Resume Next
     valeur = Trim(valeur)
-    If valeur = "" Then _ConvertirDate = Empty : Exit Function
+    If valeur = "" Then ConvertirDate = Empty : Exit Function
     valeur = Replace(valeur, "-", "/")
     valeur = Replace(valeur, ".", "/")
     Dim parties() As String
     parties = Split(valeur, "/")
     If UBound(parties) = 2 Then
-        _ConvertirDate = DateSerial(CInt(parties(2)), CInt(parties(1)), CInt(parties(0)))
+        ConvertirDate = DateSerial(CInt(parties(2)), CInt(parties(1)), CInt(parties(0)))
     Else
-        _ConvertirDate = CDate(valeur)
+        ConvertirDate = CDate(valeur)
     End If
-    If Err.Number <> 0 Then _ConvertirDate = Empty
+    If Err.Number <> 0 Then ConvertirDate = Empty
     On Error GoTo 0
 End Function
 
 ' Génère un ID unique : F2025-0001 ou C2025-0001
-Private Function _GenererID(ws As Worksheet, prefixe As String) As String
+Private Function GenererID(ws As Worksheet, prefixe As String) As String
     Dim der As Long
-    der = _DerniereLigne(ws)
+    der = DerniereLigne(ws)
     Dim annee As String
     annee = CStr(Year(Now))
     If der <= 1 Then
-        _GenererID = prefixe & annee & "-0001"
+        GenererID = prefixe & annee & "-0001"
     Else
-        _GenererID = prefixe & annee & "-" & Format(der, "0000")
+        GenererID = prefixe & annee & "-" & Format(der, "0000")
     End If
 End Function
 
 ' Retourne le numéro de la dernière ligne avec données en colonne A
-Private Function _DerniereLigne(ws As Worksheet) As Long
-    _DerniereLigne = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+Private Function DerniereLigne(ws As Worksheet) As Long
+    DerniereLigne = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
 End Function
 
 ' Affiche un message de statut coloré dans la zone statut de PDF_Import
-Private Sub _Statut(ws As Worksheet, message As String, niveau As String)
+Private Sub Statut(ws As Worksheet, message As String, niveau As String)
     Dim c As Range
     Set c = ws.Range("A23")
     c.Value = message
@@ -601,12 +604,10 @@ End Sub
 '  SECTION 7 - LICENCE
 ' ============================================================
 
-Private Const REG_PATH        As String = "HKCU\Software\EasyCompta\"
-
-Private Function _GetSecret() As String
+Private Function LicGetSecret() As String
     Dim p1 As String, p2 As String, p3 As String, p4 As String, p5 As String
     p1 = "SEB$" : p2 = "C0mpt" : p3 = "4bl3#" : p4 = "Pr0j3" : p5 = "t9!"
-    _GetSecret = p1 & p2 & p3 & p4 & p5
+    LicGetSecret = p1 & p2 & p3 & p4 & p5
 End Function
 
 Public Sub VerifierOuDemanderLicence()
@@ -615,11 +616,11 @@ Public Sub VerifierOuDemanderLicence()
 
     Dim email As String, cle As String
     On Error Resume Next
-    email = wsh.RegRead(REG_PATH & "Email")
-    cle   = wsh.RegRead(REG_PATH & "Cle")
+    email = wsh.RegRead(REG_PATH & "\Email")
+    cle   = wsh.RegRead(REG_PATH & "\Cle")
     On Error GoTo 0
 
-    If email <> "" And cle <> "" And _VerifierLicence(cle, email) Then
+    If email <> "" And cle <> "" And LicVerifier(cle, email) Then
         Exit Sub
     End If
 
@@ -641,9 +642,9 @@ Public Sub VerifierOuDemanderLicence()
                        "(format : SEB-AAAA-XXXX-XXXX)", "Activation", cle)
         If cle = "" Then Exit Sub
 
-        If _VerifierLicence(cle, email) Then
-            wsh.RegWrite REG_PATH & "Email", LCase(Trim(email)), "REG_SZ"
-            wsh.RegWrite REG_PATH & "Cle",   UCase(Trim(cle)),   "REG_SZ"
+        If LicVerifier(cle, email) Then
+            wsh.RegWrite REG_PATH & "\Email", LCase(Trim(email)), "REG_SZ"
+            wsh.RegWrite REG_PATH & "\Cle",   UCase(Trim(cle)),   "REG_SZ"
             MsgBox "Licence activee avec succes !" & vbCrLf & "Merci pour votre soutien.", _
                    vbInformation, "Activation reussie"
             Exit Sub
@@ -655,7 +656,7 @@ Public Sub VerifierOuDemanderLicence()
     Loop
 End Sub
 
-Private Function _VerifierLicence(cle As String, email As String) As Boolean
+Private Function LicVerifier(cle As String, email As String) As Boolean
     cle = UCase(Trim(cle))
     If Len(cle) <> 18 Then Exit Function
     If Left$(cle, 4) <> "SEB-" Then Exit Function
@@ -664,12 +665,12 @@ Private Function _VerifierLicence(cle As String, email As String) As Boolean
     hashCle = Mid$(cle, 10, 4) & Mid$(cle, 15, 4)
 
     Dim expected As String
-    expected = _HashCle(LCase(Trim(email)) & _GetSecret())
+    expected = LicHashCle(LCase(Trim(email)) & LicGetSecret())
 
-    _VerifierLicence = (hashCle = Left$(expected, 8))
+    LicVerifier = (hashCle = Left$(expected, 8))
 End Function
 
-Private Function _HashCle(texte As String) As String
+Private Function LicHashCle(texte As String) As String
     Dim h1 As Double, h2 As Double
     Dim m1 As Double, m2 As Double
     Dim i As Long, v As Long
@@ -684,5 +685,5 @@ Private Function _HashCle(texte As String) As String
         h1 = h1 - Int(h1 / 2147483648#) * 2147483648#
         h2 = h2 - Int(h2 / 2147483648#) * 2147483648#
     Next i
-    _HashCle = Right$("00000000" & Hex$(CLng(h1) Xor CLng(h2)), 8)
+    LicHashCle = Right$("00000000" & Hex$(CLng(h1) Xor CLng(h2)), 8)
 End Function

@@ -212,10 +212,13 @@ def integrer_vba():
     subprocess.run(["taskkill", "/F", "/IM", "EXCEL.EXE"], capture_output=True)
     time.sleep(1.5)
 
-    tmp_bas = None
     try:
-        # ── Étape 1 : préparer le .bas CP1252 pour Import ──────────────────────
-        tmp_bas = _ecrire_bas_cp1252(BAS)
+        # ── Étape 1 : lire le source UTF-8 directement ─────────────────────────
+        with open(BAS, encoding='utf-8') as f:
+            bas_lines = f.read().splitlines()
+        if bas_lines and bas_lines[0].startswith('Attribute VB_Name'):
+            bas_lines = bas_lines[1:]
+        bas_code = '\r\n'.join(bas_lines)
 
         # ── Étape 2 : ouvrir xlsx, injecter VBA, sauvegarder en xlsm ───────────
         xl = _xl_new()
@@ -233,9 +236,11 @@ def integrer_vba():
                     comps.Remove(c)
                     break
 
-            # Importer via Import() — génère un p-code stable
-            print(f"  Import de vba_Comptabilite.bas (via Import)...")
-            comps.Import(tmp_bas)
+            # Injecter via AddFromString (Unicode natif, pas de conversion CP1252)
+            print(f"  Injection de vba_Comptabilite.bas (via AddFromString UTF-8)...")
+            new_mod = comps.Add(1)
+            new_mod.Name = "Mod_Comptabilite"
+            new_mod.CodeModule.AddFromString(bas_code)
 
             # Injecter Workbook_Open / BeforeClose dans ThisWorkbook
             print("  Injection ThisWorkbook...")
@@ -272,9 +277,6 @@ def integrer_vba():
         print("\n  VBA integre et compile avec succes.")
 
     finally:
-        if tmp_bas and os.path.exists(tmp_bas):
-            try: os.remove(tmp_bas)
-            except: pass
         _restaurer_vba_access(version, old_val)
 
 
