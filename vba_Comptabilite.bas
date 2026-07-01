@@ -1,7 +1,7 @@
 Attribute VB_Name = "Mod_Comptabilite"
 ' ============================================================
 '  MODULE : Mod_Comptabilite
-'  Projet : Système de gestion comptable SEB
+'  Projet : Système de gestion comptable IMC
 '  Usage   : Importer via Alt+F11 > Fichier > Importer
 '            puis exécuter Setup_Boutons (Alt+F8)
 ' ============================================================
@@ -606,7 +606,7 @@ End Sub
 
 Private Function LicGetSecret() As String
     Dim p1 As String, p2 As String, p3 As String, p4 As String, p5 As String
-    p1 = "SEB$" : p2 = "C0mpt" : p3 = "4bl3#" : p4 = "Pr0j3" : p5 = "t9!"
+    p1 = "IMC$" : p2 = "C0mpt" : p3 = "4bl3#" : p4 = "Pr0j3" : p5 = "t9!"
     LicGetSecret = p1 & p2 & p3 & p4 & p5
 End Function
 
@@ -639,7 +639,7 @@ Public Sub VerifierOuDemanderLicence()
         If email = "" Then Exit Sub
 
         cle = InputBox("Entrez votre cle de licence :" & vbCrLf & _
-                       "(format : SEB-AAAA-XXXX-XXXX)", "Activation", cle)
+                       "(format : IMC-AAAA-XXXX-XXXX)", "Activation", cle)
         If cle = "" Then Exit Sub
 
         If LicVerifier(cle, email) Then
@@ -659,7 +659,7 @@ End Sub
 Private Function LicVerifier(cle As String, email As String) As Boolean
     cle = UCase(Trim(cle))
     If Len(cle) <> 18 Then Exit Function
-    If Left$(cle, 4) <> "SEB-" Then Exit Function
+    If Left$(cle, 4) <> "IMC-" Then Exit Function
 
     Dim hashCle As String
     hashCle = Mid$(cle, 10, 4) & Mid$(cle, 15, 4)
