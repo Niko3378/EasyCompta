@@ -123,6 +123,8 @@ Private Sub Creer_Bouton_TVA()
     Next shp
     AjouterBouton ws, "btn_CalcTVA", "Recalculer TVA", _
         ws.Range("E3").Left, ws.Range("E3").Top, 160, 30, CLR_ROUGE, "Mod_Comptabilite.RecalculerTVA"
+    AjouterBouton ws, "btn_ExportCSV", "Exporter CSV", _
+        ws.Range("H3").Left, ws.Range("H3").Top, 160, 30, CLR_VERT, "Mod_Comptabilite.ExporterCSV"
 End Sub
 
 ' -- Fonction générique de création de bouton ----------------------------------
@@ -413,6 +415,106 @@ Public Sub Ouvrir_Manuel()
     Set wsh = CreateObject("WScript.Shell")
     wsh.Run "cmd /c start """" """ & pdfPath & """", 0, False
 End Sub
+
+
+' ============================================================
+'  SECTION 5 - EXPORT CSV COMPTABLE
+' ============================================================
+
+Public Sub ExporterCSV()
+    Dim annee  As String : annee  = CStr(Year(Now))
+    Dim mois   As String : mois   = Format(Month(Now), "00")
+    Dim nom    As String : nom    = "EasyCompta_export_" & annee & "-" & mois & ".csv"
+    Dim chemin As String : chemin = ThisWorkbook.Path & "\" & nom
+
+    If MsgBox("Exporter toutes les factures en CSV ?" & vbCrLf & vbCrLf & _
+              "Fichier : " & nom & vbCrLf & _
+              "Dossier : " & ThisWorkbook.Path, _
+              vbQuestion + vbYesNo, "Export CSV") = vbNo Then Exit Sub
+
+    Dim SEP As String : SEP = ";"
+    Dim lignes As String
+    lignes = "Type" & SEP & "N" & Chr(176) & " Facture" & SEP & "Date" & SEP & "Nom" & SEP & _
+             "Montant HT" & SEP & "Montant TVA" & SEP & "Montant TTC" & SEP & _
+             "Taux TVA %" & SEP & "Cat" & Chr(233) & "gorie" & SEP & "Statut" & SEP & _
+             "R" & Chr(233) & "f" & Chr(233) & "rence PDF" & vbCrLf
+    lignes = lignes & CsvLignesFeuille(SH_FOURN, "Fournisseur", SEP)
+    lignes = lignes & CsvLignesFeuille(SH_CLIENTS, "Client", SEP)
+
+    Dim ado As Object
+    Set ado = CreateObject("ADODB.Stream")
+    ado.Type = 2
+    ado.Charset = "utf-8"
+    ado.Open
+    ado.WriteText lignes
+    ado.SaveToFile chemin, 2
+    ado.Close
+    Set ado = Nothing
+
+    If MsgBox("Export termin" & Chr(233) & "." & vbCrLf & nom & " cr" & Chr(233) & Chr(233) & _
+              " dans :" & vbCrLf & ThisWorkbook.Path & vbCrLf & vbCrLf & "Ouvrir le fichier ?", _
+              vbQuestion + vbYesNo, "Export CSV") = vbYes Then
+        Dim wsh As Object
+        Set wsh = CreateObject("WScript.Shell")
+        wsh.Run "cmd /c start """" """ & chemin & """", 0, False
+    End If
+End Sub
+
+Private Function CsvLignesFeuille(nomFeuille As String, typeDoc As String, SEP As String) As String
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets(nomFeuille)
+    Dim der As Long : der = DerniereLigne(ws)
+    Dim result As String : result = ""
+    Dim i As Long
+    For i = 2 To der
+        If Trim(CStr(ws.Cells(i, 1).Value)) <> "" Then
+            result = result & _
+                typeDoc & SEP & _
+                CsvVal(CStr(ws.Cells(i, 3).Value)) & SEP & _
+                CsvDate(ws.Cells(i, 4).Value) & SEP & _
+                CsvVal(CStr(ws.Cells(i, 2).Value)) & SEP & _
+                CsvMontant(ws.Cells(i, 5).Value) & SEP & _
+                CsvMontant(ws.Cells(i, 6).Value) & SEP & _
+                CsvMontant(ws.Cells(i, 7).Value) & SEP & _
+                CsvMontant(ws.Cells(i, 8).Value) & SEP & _
+                CsvVal(CStr(ws.Cells(i, 9).Value)) & SEP & _
+                CsvVal(CStr(ws.Cells(i, 11).Value)) & SEP & _
+                CsvVal(CStr(ws.Cells(i, 10).Value)) & vbCrLf
+        End If
+    Next i
+    CsvLignesFeuille = result
+End Function
+
+Private Function CsvVal(v As String) As String
+    v = Trim(v)
+    If InStr(v, ";") > 0 Or InStr(v, """") > 0 Or InStr(v, Chr(10)) > 0 Then
+        CsvVal = """" & Replace(v, """", """""") & """"
+    Else
+        CsvVal = v
+    End If
+End Function
+
+Private Function CsvDate(v As Variant) As String
+    On Error Resume Next
+    If IsEmpty(v) Or CStr(v) = "" Or v = 0 Then
+        CsvDate = ""
+    Else
+        CsvDate = Format(CDate(v), "DD/MM/YYYY")
+    End If
+    If Err.Number <> 0 Then CsvDate = CStr(v)
+    On Error GoTo 0
+End Function
+
+Private Function CsvMontant(v As Variant) As String
+    On Error Resume Next
+    If IsEmpty(v) Or CStr(v) = "" Then
+        CsvMontant = "0,00"
+    Else
+        CsvMontant = Replace(Format(CDbl_FR(v), "0.00"), ".", ",")
+    End If
+    If Err.Number <> 0 Then CsvMontant = "0,00"
+    On Error GoTo 0
+End Function
 
 
 ' ============================================================
