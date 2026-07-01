@@ -1,3 +1,8 @@
+# Gros binaires (> 50 Mo — dépasser la limite GitHub)
+dist/
+installer/*.msi
+installer/*.exe
+
 # Build artifacts
 build/
 build_log.txt
