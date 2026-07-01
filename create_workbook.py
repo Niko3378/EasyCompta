@@ -551,7 +551,7 @@ def creer_feuille_guide(wb):
     ws.column_dimensions['B'].width = 80
     ws.column_dimensions['C'].width = 30
 
-    cell_header(ws, 1, 1, "GUIDE UTILISATEUR — SYSTÈME DE GESTION COMPTABLE IMC",
+    cell_header(ws, 1, 1, "GUIDE UTILISATEUR — SYSTÈME DE GESTION COMPTABLE ECPT",
                 bg=C_VIOLET, size=16, merge_to="C", row_height=52)
 
     contenu = [

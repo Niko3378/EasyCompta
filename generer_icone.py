@@ -72,7 +72,7 @@ def make_icon(size: int) -> Image.Image:
         d.rectangle([col_x, top_y, col_x + lw, top_y + n_rows * row_h],
                     fill=C_BLANC)
 
-    # ── Lettre "S" centrée (petites tailles) ou "SEB" (grandes) ─────────────
+    # ── Lettre "E" centrée (petites tailles) ou "ECPT" (grandes) ───────────
     try:
         if s >= 128:
             font_size = int(22 * scale)

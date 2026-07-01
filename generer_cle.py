@@ -26,7 +26,7 @@ import datetime
 from pathlib import Path
 
 # Doit être identique à la constante SECRET dans vba_Comptabilite.bas
-SECRET = "IMC$C0mpt4bl3#Pr0j3t9!"
+SECRET = "ECPT$C0mpt4bl3#Pr0j3t9!"
 
 
 def _hash_cle(texte: str) -> str:
@@ -44,14 +44,14 @@ def generer_cle(email: str, annee: int | None = None) -> str:
     if annee is None:
         annee = datetime.date.today().year
     h = _hash_cle(email.lower().strip() + SECRET)
-    return f"IMC-{annee}-{h[:4]}-{h[4:8]}"
+    return f"ECPT-{annee}-{h[:4]}-{h[4:8]}"
 
 
 def verifier_cle(cle: str, email: str) -> bool:
     cle = cle.upper().strip()
     if len(cle) != 18:
         return False
-    if not cle.startswith("IMC-"):
+    if not cle.startswith("ECPT-"):
         return False
     hash_cle = cle[9:13] + cle[14:18]
     expected = _hash_cle(email.lower().strip() + SECRET)
