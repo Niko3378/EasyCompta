@@ -675,11 +675,11 @@ End Sub
 
 Private Function LicVerifier(cle As String, email As String) As Boolean
     cle = UCase(Trim(cle))
-    If Len(cle) <> 18 Then Exit Function
-    If Left$(cle, 4) <> "ECPT-" Then Exit Function
+    If Len(cle) <> 19 Then Exit Function
+    If Left$(cle, 5) <> "ECPT-" Then Exit Function
 
     Dim hashCle As String
-    hashCle = Mid$(cle, 10, 4) & Mid$(cle, 15, 4)
+    hashCle = Mid$(cle, 11, 4) & Mid$(cle, 16, 4)
 
     Dim expected As String
     expected = LicHashCle(LCase(Trim(email)) & LicGetSecret())

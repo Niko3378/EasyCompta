@@ -49,11 +49,11 @@ def generer_cle(email: str, annee: int | None = None) -> str:
 
 def verifier_cle(cle: str, email: str) -> bool:
     cle = cle.upper().strip()
-    if len(cle) != 18:
+    if len(cle) != 19:
         return False
     if not cle.startswith("ECPT-"):
         return False
-    hash_cle = cle[9:13] + cle[14:18]
+    hash_cle = cle[10:14] + cle[15:19]
     expected = _hash_cle(email.lower().strip() + SECRET)
     return hash_cle == expected[:8]
 
