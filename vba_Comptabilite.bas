@@ -35,7 +35,7 @@ Private Const APP_VERSION     As String = "2.0.0"
 '  SECTION 1 - SETUP INITIAL
 ' ============================================================
 
-Public Sub Setup_Boutons()
+Public Sub Setup_Boutons(Optional bSilent As Integer = 0)
     Application.ScreenUpdating = False
     On Error GoTo ErrHandler
 
@@ -51,13 +51,18 @@ Public Sub Setup_Boutons()
     ColoriserLignesDB ThisWorkbook.Sheets(SH_CLIENTS)
 
     Application.ScreenUpdating = True
-    MsgBox "Configuration terminée !" & vbCrLf & _
-           "Les boutons ont été créés sur toutes les feuilles.", _
-           vbInformation, "Setup réussi"
+    If Not bSilent Then
+        MsgBox "Configuration termin" & Chr(233) & "e !" & vbCrLf & _
+               "Les boutons ont " & Chr(233) & "t" & Chr(233) & " cr" & Chr(233) & _
+               Chr(233) & "s sur toutes les feuilles.", _
+               vbInformation, "Setup r" & Chr(233) & "ussi"
+    End If
     Exit Sub
 ErrHandler:
     Application.ScreenUpdating = True
-    MsgBox "Erreur lors du setup : " & Err.Description, vbCritical, "Erreur"
+    If Not bSilent Then
+        MsgBox "Erreur lors du setup : " & Err.Description, vbCritical, "Erreur"
+    End If
 End Sub
 
 ' -- Boutons feuille PDF_Import ------------------------------------------------
