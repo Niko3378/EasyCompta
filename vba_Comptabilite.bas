@@ -28,6 +28,7 @@ Private Const CLR_VIOLET     As Long = 7340032    ' #7030A0
 
 ' Licence
 Private Const REG_PATH        As String = "HKCU\Software\EasyCompta"
+Private Const APP_VERSION     As String = "2.0.0"
 
 
 ' ============================================================
@@ -43,6 +44,7 @@ Public Sub Setup_Boutons()
     Call Creer_Bouton_DB(SH_CLIENTS, "Ouvrir_PDF_Ligne",  "Ouvrir PDF",       "D1", CLR_VERT,        120, 26)
     Call Creer_Bouton_DB2(SH_FOURN,   "MettreAJourStatut", "Statut paiement", "F1", CLR_ORANGE, 140, 26)
     Call Creer_Bouton_DB2(SH_CLIENTS, "MettreAJourStatut", "Statut paiement", "F1", CLR_ORANGE, 140, 26)
+    Call Creer_Bouton_DB3(SH_CLIENTS, "GenererRelance",    "Relance",         "H1", CLR_ROUGE,  120, 26)
     Call Creer_Bouton_Pivot
     Call Creer_Bouton_TVA
     ColoriserLignesDB ThisWorkbook.Sheets(SH_FOURN)
@@ -116,6 +118,18 @@ Private Sub Creer_Bouton_DB2(nom_feuille As String, action As String, label As S
         If shp.Name = "btn2_" & nom_feuille Then shp.Delete
     Next shp
     AjouterBouton ws, "btn2_" & nom_feuille, label, _
+        ws.Range(cellule).Left, ws.Range(cellule).Top, larg, haut, couleur, "Mod_Comptabilite." & action
+End Sub
+
+Private Sub Creer_Bouton_DB3(nom_feuille As String, action As String, label As String, _
+                                cellule As String, couleur As Long, larg As Double, haut As Double)
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets(nom_feuille)
+    Dim shp As Shape
+    For Each shp In ws.Shapes
+        If shp.Name = "btn3_" & nom_feuille Then shp.Delete
+    Next shp
+    AjouterBouton ws, "btn3_" & nom_feuille, label, _
         ws.Range(cellule).Left, ws.Range(cellule).Top, larg, haut, couleur, "Mod_Comptabilite." & action
 End Sub
 
@@ -515,7 +529,7 @@ Private Sub ColoriserLigne(ws As Worksheet, ligne As Long)
     Dim statut As String
     statut = Trim(CStr(ws.Cells(ligne, 11).Value))
     Dim rng As Range
-    Set rng = ws.Range(ws.Cells(ligne, 1), ws.Cells(ligne, 14))
+    Set rng = ws.Range(ws.Cells(ligne, 1), ws.Cells(ligne, 15))
     Select Case statut
         Case "Pay" & Chr(233)
             rng.Interior.Color = RGB(198, 239, 206)
@@ -545,6 +559,171 @@ Private Sub ColoriserLignesDB(ws As Worksheet)
         End If
     Next i
 End Sub
+
+
+' ============================================================
+'  SECTION 4c - RELANCES CLIENTS
+' ============================================================
+
+Public Sub GenererRelance()
+    Dim ws As Worksheet
+    Set ws = ActiveSheet
+
+    If ws.Name <> SH_CLIENTS Then
+        MsgBox "Les relances ne s'appliquent qu'aux Clients_DB.", _
+               vbExclamation, "Feuille incorrecte"
+        Exit Sub
+    End If
+
+    Dim ligne As Long
+    ligne = ActiveCell.Row
+    If ligne <= 1 Or Trim(CStr(ws.Cells(ligne, 1).Value)) = "" Then
+        MsgBox "S" & Chr(233) & "lectionnez d'abord une ligne de donn" & Chr(233) & "es.", _
+               vbInformation, "S" & Chr(233) & "lection"
+        Exit Sub
+    End If
+
+    Dim statut As String : statut = Trim(CStr(ws.Cells(ligne, 11).Value))
+    If statut <> "En retard" Then
+        MsgBox "La relance ne s'applique qu'aux factures ""En retard""." & vbCrLf & _
+               "Statut actuel : " & statut, vbExclamation, "Statut incorrect"
+        Exit Sub
+    End If
+
+    ' Incrémenter le compteur de relances (col 15)
+    Dim nbRel As Long
+    nbRel = 0
+    On Error Resume Next
+    nbRel = CLng(ws.Cells(ligne, 15).Value)
+    On Error GoTo 0
+    nbRel = nbRel + 1
+    ws.Cells(ligne, 15).Value = nbRel
+
+    ' Récupérer les données de la ligne
+    Dim nomClient  As String : nomClient  = Trim(CStr(ws.Cells(ligne, 2).Value))
+    Dim numFacture As String : numFacture = Trim(CStr(ws.Cells(ligne, 3).Value))
+    Dim dateFacture As String : dateFacture = ""
+    On Error Resume Next
+    If Not IsEmpty(ws.Cells(ligne, 4).Value) And ws.Cells(ligne, 4).Value <> 0 Then
+        dateFacture = Format(CDate(ws.Cells(ligne, 4).Value), "DD/MM/YYYY")
+    End If
+    On Error GoTo 0
+    Dim montantTTC As Double : montantTTC = 0
+    On Error Resume Next
+    montantTTC = CDbl(ws.Cells(ligne, 7).Value)
+    On Error GoTo 0
+
+    ' Écrire le HTML dans %TEMP% et l'ouvrir
+    Dim htmlPath As String
+    htmlPath = Environ("TEMP") & "\relance_" & Format(Now, "YYYYMMDD_HHMMSS") & ".html"
+    Dim html As String
+    html = HtmlRelance(nomClient, numFacture, dateFacture, montantTTC, nbRel)
+
+    Dim ado As Object
+    Set ado = CreateObject("ADODB.Stream")
+    ado.Type = 2
+    ado.Charset = "utf-8"
+    ado.Open
+    ado.WriteText html
+    ado.SaveToFile htmlPath, 2
+    ado.Close
+    Set ado = Nothing
+
+    Dim wsh As Object
+    Set wsh = CreateObject("WScript.Shell")
+    wsh.Run "cmd /c start """" """ & htmlPath & """", 0, False
+
+    MsgBox OrdinalRelance(nbRel) & " relance g" & Chr(233) & "n" & Chr(233) & "r" & Chr(233) & _
+           "e pour " & nomClient & "." & vbCrLf & _
+           "Imprimez ou enregistrez en PDF depuis votre navigateur.", _
+           vbInformation, "Relance client"
+End Sub
+
+Private Function OrdinalRelance(n As Long) As String
+    If n = 1 Then
+        OrdinalRelance = "1" & Chr(232) & "re"
+    Else
+        OrdinalRelance = CStr(n) & Chr(232) & "me"
+    End If
+End Function
+
+Private Function HtmlRelance(nomClient As String, numFacture As String, _
+                              dateFacture As String, montantTTC As Double, _
+                              nbRel As Long) As String
+    Dim montantStr As String
+    montantStr = Replace(Format(montantTTC, "0.00"), ".", ",") & " " & Chr(8364)
+    Dim dateAujourd As String : dateAujourd = Format(Date, "DD/MM/YYYY")
+
+    Dim objet As String, intro As String, corps As String, conclusion As String
+    Select Case nbRel
+        Case 1
+            objet = "Rappel de facture impay" & Chr(233) & "e n" & Chr(176) & " " & numFacture
+            intro = "Nous vous contactons afin de vous rappeler que la facture mentionn" & Chr(233) & _
+                    "e ci-dessous reste " & Chr(224) & " ce jour sans r" & Chr(232) & "glement."
+            corps = "Nous vous remercions de bien vouloir proc" & Chr(233) & _
+                    "der au paiement dans les plus brefs d" & Chr(233) & "lais."
+            conclusion = "Dans l'attente de votre r" & Chr(232) & "glement, nous restons " & _
+                         Chr(224) & " votre disposition."
+        Case 2
+            objet = "2" & Chr(232) & "me relance — Facture impay" & Chr(233) & "e n" & Chr(176) & " " & numFacture
+            intro = "Malgr" & Chr(233) & " notre premier rappel, la facture ci-dessous demeure impay" & Chr(233) & "e."
+            corps = "Nous vous demandons instamment de r" & Chr(233) & "gler cette somme sous 8 jours ouvrables."
+            conclusion = "Sans r" & Chr(233) & "glement dans ce d" & Chr(233) & "lai, nous nous verrons contraints " & _
+                         "d'engager une proc" & Chr(233) & "dure de recouvrement."
+        Case Else
+            objet = "Mise en demeure — Facture n" & Chr(176) & " " & numFacture
+            intro = "Suite " & Chr(224) & " vos pr" & Chr(233) & "c" & Chr(233) & "dentes relances rest" & Chr(233) & _
+                    "es sans r" & Chr(233) & "ponse, nous constatons le non-paiement persistant de la facture ci-dessous."
+            corps = "Nous vous mettons en demeure de r" & Chr(233) & "gler la somme due dans un d" & Chr(233) & _
+                    "lai de 5 jours ouvrables."
+            conclusion = Chr(192) & " d" & Chr(233) & "faut de paiement, nous proc" & Chr(233) & "derons " & _
+                         Chr(224) & " un recouvrement judiciaire sans autre pr" & Chr(233) & "avis."
+    End Select
+
+    Dim css As String
+    css = "body{font-family:Arial,sans-serif;font-size:13px;color:#222;margin:40px;max-width:780px}"
+    css = css & "h1{font-size:18px;color:#1F4E79;border-bottom:2px solid #1F4E79;padding-bottom:6px}"
+    css = css & ".header{display:flex;justify-content:space-between;margin-bottom:30px}"
+    css = css & ".company{font-weight:bold;font-size:15px;color:#1F4E79}"
+    css = css & ".date{color:#555;font-size:12px}"
+    css = css & "table{width:100%;border-collapse:collapse;margin:20px 0}"
+    css = css & "th{background:#1F4E79;color:#fff;padding:8px;text-align:left}"
+    css = css & "td{padding:8px;border-bottom:1px solid #ddd}"
+    css = css & ".montant{font-weight:bold;color:#C00000;font-size:16px}"
+    css = css & ".footer{margin-top:40px;font-size:11px;color:#888;border-top:1px solid #ccc;padding-top:10px}"
+    css = css & "@media print{body{margin:15px}}"
+
+    Dim thRow As String
+    thRow = "<tr><th>N" & Chr(176) & " Facture</th>"
+    thRow = thRow & "<th>Date d'" & Chr(233) & "mission</th>"
+    thRow = thRow & "<th>Montant TTC</th></tr>"
+
+    Dim tdRow As String
+    tdRow = "<tr><td>" & numFacture & "</td><td>" & dateFacture & "</td>"
+    tdRow = tdRow & "<td class=""montant"">" & montantStr & "</td></tr>"
+
+    Dim footerTxt As String
+    footerTxt = "G" & Chr(233) & "n" & Chr(233) & "r" & Chr(233)
+    footerTxt = footerTxt & " par EasyCompta v" & APP_VERSION & " le " & dateAujourd & "."
+
+    Dim h As String
+    h = "<!DOCTYPE html><html lang=""fr""><head><meta charset=""UTF-8"">"
+    h = h & "<style>" & css & "</style></head><body>"
+    h = h & "<div class=""header"">"
+    h = h & "<div class=""company"">EasyCompta</div>"
+    h = h & "<div class=""date"">Le " & dateAujourd & "</div></div>"
+    h = h & "<h1>Lettre de relance — " & OrdinalRelance(nbRel) & " relance</h1>"
+    h = h & "<p><strong>Destinataire :</strong> " & nomClient & "</p>"
+    h = h & "<p><strong>Objet :</strong> " & objet & "</p>"
+    h = h & "<p>" & intro & "</p>"
+    h = h & "<table>" & thRow & tdRow & "</table>"
+    h = h & "<p>" & corps & "</p>"
+    h = h & "<p>" & conclusion & "</p>"
+    h = h & "<p style=""margin-top:40px"">Cordialement,<br><strong>EasyCompta</strong></p>"
+    h = h & "<div class=""footer"">" & footerTxt & "</div>"
+    h = h & "</body></html>"
+    HtmlRelance = h
+End Function
 
 
 ' ============================================================

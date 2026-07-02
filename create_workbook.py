@@ -89,9 +89,10 @@ def creer_feuille_db(wb, nom, tab_color, table_name):
         "ID_Facture", "Fournisseur / Client", "Numéro_Facture",
         "Date_Emission", "Montant_HT", "Montant_TVA", "Montant_TTC",
         "Taux_TVA", "Catégorie", "Lien_PDF",
-        "Statut_Paiement", "Date_Import", "Source_Extraction", "Date_Règlement"
+        "Statut_Paiement", "Date_Import", "Source_Extraction", "Date_Règlement",
+        "Nb_Relances"
     ]
-    widths = [16, 28, 20, 14, 14, 14, 14, 11, 20, 45, 16, 14, 18, 16]
+    widths = [16, 28, 20, 14, 14, 14, 14, 11, 20, 45, 16, 14, 18, 16, 12]
 
     for col, (h, w) in enumerate(zip(headers, widths), 1):
         cell_header(ws, 1, col, h, row_height=38)
@@ -115,6 +116,7 @@ def creer_feuille_db(wb, nom, tab_color, table_name):
         ws.cell(row=row, column=4).number_format  = 'DD/MM/YYYY'
         ws.cell(row=row, column=12).number_format = 'DD/MM/YYYY'
         ws.cell(row=row, column=14).number_format = 'DD/MM/YYYY'
+        ws.cell(row=row, column=15).number_format = '0'
 
     # Validations
     dv_statut = DataValidation(type="list",
