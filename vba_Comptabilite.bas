@@ -41,8 +41,12 @@ Public Sub Setup_Boutons()
     Call Creer_Boutons_PDF_Import
     Call Creer_Bouton_DB(SH_FOURN,   "Ouvrir_PDF_Ligne",  "Ouvrir PDF",       "D1", CLR_BLEU_FONCE, 120, 26)
     Call Creer_Bouton_DB(SH_CLIENTS, "Ouvrir_PDF_Ligne",  "Ouvrir PDF",       "D1", CLR_VERT,        120, 26)
+    Call Creer_Bouton_DB2(SH_FOURN,   "MettreAJourStatut", "Statut paiement", "F1", CLR_ORANGE, 140, 26)
+    Call Creer_Bouton_DB2(SH_CLIENTS, "MettreAJourStatut", "Statut paiement", "F1", CLR_ORANGE, 140, 26)
     Call Creer_Bouton_Pivot
     Call Creer_Bouton_TVA
+    ColoriserLignesDB ThisWorkbook.Sheets(SH_FOURN)
+    ColoriserLignesDB ThisWorkbook.Sheets(SH_CLIENTS)
 
     Application.ScreenUpdating = True
     MsgBox "Configuration terminée !" & vbCrLf & _
@@ -100,6 +104,18 @@ Private Sub Creer_Bouton_DB(nom_feuille As String, action As String, label As St
         If shp.Name = "btn_" & nom_feuille Then shp.Delete
     Next shp
     AjouterBouton ws, "btn_" & nom_feuille, label, _
+        ws.Range(cellule).Left, ws.Range(cellule).Top, larg, haut, couleur, "Mod_Comptabilite." & action
+End Sub
+
+Private Sub Creer_Bouton_DB2(nom_feuille As String, action As String, label As String, _
+                                cellule As String, couleur As Long, larg As Double, haut As Double)
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets(nom_feuille)
+    Dim shp As Shape
+    For Each shp In ws.Shapes
+        If shp.Name = "btn2_" & nom_feuille Then shp.Delete
+    Next shp
+    AjouterBouton ws, "btn2_" & nom_feuille, label, _
         ws.Range(cellule).Left, ws.Range(cellule).Top, larg, haut, couleur, "Mod_Comptabilite." & action
 End Sub
 
@@ -322,6 +338,7 @@ Public Sub EnvoyerVersBase()
     End With
 
     Statut ws, "[OK] Enregistre dans " & cibleSheet & " (ligne " & derLigne & ", ID : " & idFacture & ").", "vert"
+    ColoriserLigne wsDest, derLigne
 
     ' Proposer rafraîchissement
     If MsgBox("Données enregistrées." & vbCrLf & _
@@ -414,6 +431,119 @@ Public Sub Ouvrir_Manuel()
     Dim wsh As Object
     Set wsh = CreateObject("WScript.Shell")
     wsh.Run "cmd /c start """" """ & pdfPath & """", 0, False
+End Sub
+
+
+' ============================================================
+'  SECTION 4b - GESTION STATUT PAIEMENT
+' ============================================================
+
+Public Sub MettreAJourStatut()
+    Dim ws As Worksheet
+    Set ws = ActiveSheet
+
+    If ws.Name <> SH_FOURN And ws.Name <> SH_CLIENTS Then
+        MsgBox "Cette action fonctionne uniquement sur Fournisseurs_DB ou Clients_DB.", _
+               vbExclamation, "Feuille incorrecte"
+        Exit Sub
+    End If
+
+    Dim ligne As Long
+    ligne = ActiveCell.Row
+    If ligne <= 1 Or Trim(CStr(ws.Cells(ligne, 1).Value)) = "" Then
+        MsgBox "S" & Chr(233) & "lectionnez d'abord une ligne de donn" & Chr(233) & "es.", _
+               vbInformation, "S" & Chr(233) & "lection"
+        Exit Sub
+    End If
+
+    Dim numFacture As String : numFacture  = CStr(ws.Cells(ligne, 3).Value)
+    Dim statutActuel As String : statutActuel = CStr(ws.Cells(ligne, 11).Value)
+
+    Dim rep As Integer
+    rep = MsgBox("Facture : " & numFacture & vbCrLf & _
+                 "Statut actuel : " & statutActuel & vbCrLf & vbCrLf & _
+                 "[Oui]     " & Chr(8594) & " Marquer comme Pay" & Chr(233) & vbCrLf & _
+                 "[Non]     " & Chr(8594) & " Autre statut" & vbCrLf & _
+                 "[Annuler] " & Chr(8594) & " Ne rien changer", _
+                 vbQuestion + vbYesNoCancel, "Statut paiement")
+
+    If rep = vbCancel Then Exit Sub
+
+    Dim nouveauStatut As String
+    If rep = vbYes Then
+        nouveauStatut = "Pay" & Chr(233)
+    Else
+        Dim choix As String
+        choix = InputBox("Choisissez le nouveau statut :" & vbCrLf & vbCrLf & _
+                         "1 - En attente" & vbCrLf & _
+                         "2 - En retard" & vbCrLf & _
+                         "3 - Annul" & Chr(233), _
+                         "Statut paiement", "1")
+        If choix = "" Then Exit Sub
+        Select Case Trim(choix)
+            Case "1" : nouveauStatut = "En attente"
+            Case "2" : nouveauStatut = "En retard"
+            Case "3" : nouveauStatut = "Annul" & Chr(233)
+            Case Else
+                MsgBox "Choix invalide (1, 2 ou 3).", vbExclamation
+                Exit Sub
+        End Select
+    End If
+
+    ws.Cells(ligne, 11).Value = nouveauStatut
+
+    If nouveauStatut = "Pay" & Chr(233) Then
+        Dim dateStr As String
+        dateStr = InputBox("Date de r" & Chr(232) & "glement :", _
+                           "R" & Chr(232) & "glement", Format(Date, "DD/MM/YYYY"))
+        If dateStr <> "" Then
+            Dim dt As Variant
+            dt = ConvertirDate(dateStr)
+            If Not IsEmpty(dt) Then
+                ws.Cells(ligne, 14).Value = dt
+                ws.Cells(ligne, 14).NumberFormat = "DD/MM/YYYY"
+            End If
+        End If
+    Else
+        ws.Cells(ligne, 14).Value = ""
+    End If
+
+    ColoriserLigne ws, ligne
+End Sub
+
+Private Sub ColoriserLigne(ws As Worksheet, ligne As Long)
+    Dim statut As String
+    statut = Trim(CStr(ws.Cells(ligne, 11).Value))
+    Dim rng As Range
+    Set rng = ws.Range(ws.Cells(ligne, 1), ws.Cells(ligne, 14))
+    Select Case statut
+        Case "Pay" & Chr(233)
+            rng.Interior.Color = RGB(198, 239, 206)
+            rng.Font.Color     = RGB(0, 97, 0)
+        Case "En attente"
+            rng.Interior.Color = RGB(255, 235, 156)
+            rng.Font.Color     = RGB(156, 101, 0)
+        Case "En retard"
+            rng.Interior.Color = RGB(255, 199, 206)
+            rng.Font.Color     = RGB(156, 0, 6)
+        Case "Annul" & Chr(233)
+            rng.Interior.Color = RGB(217, 217, 217)
+            rng.Font.Color     = RGB(89, 89, 89)
+        Case Else
+            rng.Interior.Pattern = xlNone
+            rng.Font.Color       = RGB(0, 0, 0)
+    End Select
+End Sub
+
+Private Sub ColoriserLignesDB(ws As Worksheet)
+    Dim der As Long : der = DerniereLigne(ws)
+    If der <= 1 Then Exit Sub
+    Dim i As Long
+    For i = 2 To der
+        If Trim(CStr(ws.Cells(i, 1).Value)) <> "" Then
+            ColoriserLigne ws, i
+        End If
+    Next i
 End Sub
 
 
