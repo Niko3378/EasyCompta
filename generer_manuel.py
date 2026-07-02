@@ -231,17 +231,19 @@ def generer():
     pdf.ln(4)
 
     chapitres = [
-        ("1", "Présentation du logiciel",         "3"),
-        ("2", "Installation",                      "3"),
-        ("3", "Importer une facture PDF",           "4"),
-        ("4", "Saisie manuelle d'une facture",     "5"),
-        ("5", "Base de données Fournisseurs",       "5"),
-        ("6", "Base de données Clients",            "6"),
-        ("7", "Calcul de TVA mensuelle",            "6"),
-        ("8", "Tableaux de bord analytiques",       "7"),
-        ("9", "Taux de TVA français",               "8"),
-        ("10","Limites et conseils",                "8"),
-        ("11","Soutenir le projet",                 "9"),
+        ("1",  "Présentation du logiciel",              "3"),
+        ("2",  "Installation",                           "3"),
+        ("3",  "Importer une facture PDF",               "4"),
+        ("4",  "Saisie manuelle d'une facture",          "5"),
+        ("5",  "Base de données Fournisseurs",            "5"),
+        ("6",  "Base de données Clients",                 "6"),
+        ("7",  "Gestion du statut de paiement",          "6"),
+        ("8",  "Export CSV comptable",                   "7"),
+        ("9",  "Calcul de TVA mensuelle",                "7"),
+        ("10", "Tableaux de bord analytiques",           "8"),
+        ("11", "Taux de TVA français",                   "9"),
+        ("12", "Limites et conseils",                    "9"),
+        ("13", "Soutenir le projet",                     "10"),
     ]
     for num, titre, page in chapitres:
         pdf.set_font(FONT, 'B', 10)
@@ -278,6 +280,8 @@ def generer():
     for f in [
         "Import et extraction automatique de données depuis des factures PDF",
         "Base de données Fournisseurs et Clients (jusqu'à 2000 entrées chacune)",
+        "Gestion du statut de paiement avec colorisation automatique des lignes",
+        "Export CSV comptable (compatible Excel, Sage, EBP, Cegid)",
         "Calcul automatique de la TVA mensuelle et du solde cumulé",
         "Tableaux de bord avec graphiques (CA, dépenses, TVA)",
         "Fonctionne 100 % hors ligne — aucune connexion requise",
@@ -293,7 +297,7 @@ def generer():
     )
     pdf.sous_titre("Étapes d'installation")
     for i, e in enumerate([
-        "Double-cliquez sur EasyCompta_v1.2.0.msi",
+        "Double-cliquez sur EasyCompta_v2.0.0.msi",
         "Acceptez les conditions d'utilisation",
         "Choisissez le dossier d'installation (ou laissez le dossier proposé)",
         "Cliquez sur Installer",
@@ -413,6 +417,7 @@ def generer():
         ("Statut_Paiement",  "Payé / En attente / En retard / Annulé"),
         ("Date_Import",      "Date d'enregistrement dans le logiciel"),
         ("Source_Extraction","Manuel ou Automatique"),
+        ("Date_Règlement",   "Date effective du paiement (renseignée via le bouton Statut paiement)"),
     ]
     for col, desc in cols_fourn:
         pdf.puce(f"{col} : {desc}")
@@ -435,9 +440,94 @@ def generer():
     pdf.puce("Les montants des Fournisseurs contribuent à la TVA déductible.")
     pdf.puce("Le solde TVA à payer = TVA collectée (Clients) − TVA déductible (Fournisseurs).")
 
-    # ── Section 7 : TVA ──────────────────────────────────────────────────────
+    # ── Section 7 : Statut paiement ──────────────────────────────────────────
     pdf.add_page()
-    pdf.titre_section("7", "Calcul de TVA mensuelle", C_ROUGE)
+    pdf.titre_section("7", "Gestion du statut de paiement", C_ORANGE)
+    pdf.paragraphe(
+        "Le bouton orange Statut paiement, disponible sur les feuilles Fournisseurs_DB "
+        "et Clients_DB, permet de mettre à jour rapidement le statut de règlement d'une "
+        "facture et de visualiser en un coup d'oeil l'état de votre trésorerie."
+    )
+
+    pdf.sous_titre("Procédure")
+    for i, e in enumerate([
+        "Ouvrez Fournisseurs_DB ou Clients_DB",
+        "Cliquez sur la ligne de la facture à mettre à jour",
+        "Cliquez sur le bouton orange Statut paiement",
+        "Choisissez Oui pour marquer Payé, Non pour un autre statut",
+        "Si Payé : saisissez la date de règlement (par défaut aujourd'hui)",
+        "La ligne se colore immédiatement selon le nouveau statut",
+    ], 1):
+        pdf.etape(i, e)
+    pdf.ln(2)
+
+    pdf.sous_titre("Codes couleur")
+    couleurs = [
+        ("Vert",   "Payé",        "Facture réglée — date de règlement enregistrée"),
+        ("Jaune",  "En attente",  "Facture en cours — paiement non encore reçu/effectué"),
+        ("Rouge",  "En retard",   "Facture échue non réglée — relance recommandée"),
+        ("Gris",   "Annulé",      "Facture annulée ou avoir émis"),
+    ]
+    cols_w = [20, 28, 122]
+    hdrs_c = ["Couleur", "Statut", "Signification"]
+    pdf.set_font(FONT, 'B', 9)
+    pdf.set_fill_color(*C_BLEU)
+    pdf.set_text_color(*C_BLANC)
+    for w, h in zip(cols_w, hdrs_c):
+        pdf.cell(w, 6, f'  {h}', fill=True, border=1)
+    pdf.ln()
+    pdf.set_font(FONT, '', 9)
+    pdf.set_text_color(*C_TEXTE)
+    for i, (coul, statut, signif) in enumerate(couleurs):
+        bg = C_GRIS if i % 2 == 0 else C_BLANC
+        pdf.set_fill_color(*bg)
+        pdf.cell(cols_w[0], 6, f'  {coul}',  fill=True, border=1)
+        pdf.cell(cols_w[1], 6, f'  {statut}', fill=True, border=1)
+        pdf.cell(cols_w[2], 6, f'  {signif}', fill=True, border=1)
+        pdf.ln()
+    pdf.ln(3)
+
+    pdf.encadre(
+        "Colorisation automatique à l'ouverture",
+        "  À chaque ouverture de EasyCompta, toutes les lignes des deux bases de données\n"
+        "  sont automatiquement colorisées selon leur statut de paiement.\n"
+        "  La colonne Date_Règlement (colonne 14) enregistre la date effective du paiement.",
+        couleur_titre=C_ORANGE
+    )
+
+    # ── Section 8 : Export CSV ───────────────────────────────────────────────
+    pdf.titre_section("8", "Export CSV comptable", C_VERT)
+    pdf.paragraphe(
+        "Le bouton vert Exporter CSV, situé sur la feuille TVA_Mensuelle, génère un fichier "
+        "CSV contenant l'ensemble des factures fournisseurs et clients. Ce fichier est "
+        "directement exploitable par votre comptable ou importable dans un logiciel de "
+        "comptabilité (Sage, EBP, Cegid, etc.)."
+    )
+
+    pdf.sous_titre("Procédure d'export")
+    for i, e in enumerate([
+        "Ouvrez la feuille TVA_Mensuelle",
+        "Cliquez sur le bouton vert Exporter CSV",
+        "Confirmez l'export dans la boîte de dialogue",
+        "Le fichier EasyCompta_export_AAAA-MM.csv est créé dans le dossier du logiciel",
+        "Choisissez si vous souhaitez ouvrir le fichier immédiatement",
+    ], 1):
+        pdf.etape(i, e)
+    pdf.ln(2)
+
+    pdf.encadre(
+        "Format du fichier CSV",
+        "  Séparateur : point-virgule (;) — standard français\n"
+        "  Encodage : UTF-8 avec BOM (ouverture directe dans Excel sans problème d'accents)\n"
+        "  Colonnes : Type ; N° Facture ; Date ; Nom ; Montant HT ; Montant TVA ;\n"
+        "             Montant TTC ; Taux TVA % ; Catégorie ; Statut ; Référence PDF\n"
+        "  Contenu : toutes les factures Fournisseurs et Clients confondues",
+        couleur_titre=C_VERT
+    )
+
+    # ── Section 9 : TVA ──────────────────────────────────────────────────────
+    pdf.add_page()
+    pdf.titre_section("9", "Calcul de TVA mensuelle", C_ROUGE)
     pdf.paragraphe(
         "La feuille TVA_Mensuelle calcule automatiquement la TVA à déclarer chaque mois, "
         "en agrégeant les données de Fournisseurs_DB et Clients_DB."
@@ -469,7 +559,7 @@ def generer():
     )
 
     # ── Section 8 : Tableaux de bord ─────────────────────────────────────────
-    pdf.titre_section("8", "Tableaux de bord analytiques", C_VERT)
+    pdf.titre_section("10", "Tableaux de bord analytiques", C_VERT)
     pdf.paragraphe(
         "La feuille Pivot_Analytics offre une vue graphique de l'activité annuelle. "
         "Elle se synchronise avec l'année choisie dans TVA_Mensuelle (cellule B3)."
@@ -504,7 +594,7 @@ def generer():
 
     # ── Section 9 : Taux TVA ─────────────────────────────────────────────────
     pdf.add_page()
-    pdf.titre_section("9", "Taux de TVA français", C_ORANGE)
+    pdf.titre_section("11", "Taux de TVA français", C_ORANGE)
     pdf.paragraphe(
         "Le logiciel gère les quatre taux de TVA en vigueur en France métropolitaine."
     )
@@ -519,7 +609,7 @@ def generer():
     )
 
     # ── Section 10 : Limites ─────────────────────────────────────────────────
-    pdf.titre_section("10", "Limites et conseils", C_ROUGE)
+    pdf.titre_section("12", "Limites et conseils", C_ROUGE)
 
     pdf.sous_titre("Extraction PDF automatique")
     for l in [
@@ -551,7 +641,7 @@ def generer():
     )
 
     # ── Section 11 : Soutenir ────────────────────────────────────────────────
-    pdf.titre_section("11", "Soutenir le projet", C_ORANGE)
+    pdf.titre_section("13", "Soutenir le projet", C_ORANGE)
     pdf.paragraphe(
         "EasyCompta est un logiciel entièrement gratuit, développé et maintenu "
         "bénévolement. Si il vous fait gagner du temps et vous est utile au quotidien, "
