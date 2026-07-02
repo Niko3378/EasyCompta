@@ -83,7 +83,7 @@ def cell_value_box(ws, row, col, value=None, number_fmt=None):
 def creer_feuille_db(wb, nom, tab_color, table_name):
     ws = wb.create_sheet(nom)
     ws.sheet_properties.tabColor = tab_color
-    ws.freeze_panes = 'A2'
+    ws.freeze_panes = 'A3'
 
     headers = [
         "ID_Facture", "Fournisseur / Client", "Numéro_Facture",
@@ -94,13 +94,24 @@ def creer_feuille_db(wb, nom, tab_color, table_name):
     ]
     widths = [16, 28, 20, 14, 14, 14, 14, 11, 20, 45, 16, 14, 18, 16, 12]
 
+    # Ligne 1 : barre de boutons (contenu créé par VBA)
+    last_col_letter = get_column_letter(len(headers))
+    ws.merge_cells(f"A1:{last_col_letter}1")
+    c1 = ws['A1']
+    c1.value = "← Boutons créés automatiquement par la macro VBA (Setup_Boutons)"
+    c1.font = _font(size=9, italic=True, color="AAAAAA")
+    c1.fill = _fill("F5F5F5")
+    c1.alignment = _align(h='center', v='center')
+    ws.row_dimensions[1].height = 30
+
+    # Ligne 2 : en-têtes de colonnes
     for col, (h, w) in enumerate(zip(headers, widths), 1):
-        cell_header(ws, 1, col, h, row_height=38)
+        cell_header(ws, 2, col, h, row_height=38)
         ws.column_dimensions[get_column_letter(col)].width = w
 
-    # Table Excel structurée
+    # Table Excel structurée (en-têtes ligne 2, données 3-2001)
     tbl = Table(displayName=table_name,
-                ref=f"A1:{get_column_letter(len(headers))}2000")
+                ref=f"A2:{last_col_letter}2001")
     tbl.tableStyleInfo = TableStyleInfo(
         name="TableStyleMedium9",
         showRowStripes=True, showFirstColumn=False,
@@ -108,23 +119,23 @@ def creer_feuille_db(wb, nom, tab_color, table_name):
     )
     ws.add_table(tbl)
 
-    # Formats numériques lignes 2–2000
-    for row in range(2, 2001):
-        for col in [5, 6, 7]:                       # HT, TVA, TTC
+    # Formats numériques lignes 3–2001
+    for row in range(3, 2002):
+        for col in [5, 6, 7]:
             ws.cell(row=row, column=col).number_format = '#,##0.00 €'
-        ws.cell(row=row, column=8).number_format  = '0.0'   # Taux TVA
+        ws.cell(row=row, column=8).number_format  = '0.0'
         ws.cell(row=row, column=4).number_format  = 'DD/MM/YYYY'
         ws.cell(row=row, column=12).number_format = 'DD/MM/YYYY'
         ws.cell(row=row, column=14).number_format = 'DD/MM/YYYY'
         ws.cell(row=row, column=15).number_format = '0'
 
-    # Validations
+    # Validations (données à partir de la ligne 3)
     dv_statut = DataValidation(type="list",
         formula1='"Payé,En attente,En retard,Annulé"',
         allow_blank=True, showErrorMessage=True,
         errorTitle="Statut invalide",
         error="Choisissez : Payé | En attente | En retard | Annulé")
-    dv_statut.sqref = "K2:K2000"
+    dv_statut.sqref = "K3:K2001"
     ws.add_data_validation(dv_statut)
 
     dv_tva = DataValidation(type="list",
@@ -132,12 +143,12 @@ def creer_feuille_db(wb, nom, tab_color, table_name):
         allow_blank=True, showErrorMessage=True,
         errorTitle="Taux invalide",
         error="Taux TVA français : 0 | 5.5 | 10 | 20")
-    dv_tva.sqref = "H2:H2000"
+    dv_tva.sqref = "H3:H2001"
     ws.add_data_validation(dv_tva)
 
     dv_source = DataValidation(type="list",
         formula1='"Manuel,Automatique"', allow_blank=True)
-    dv_source.sqref = "M2:M2000"
+    dv_source.sqref = "M3:M2001"
     ws.add_data_validation(dv_source)
 
     return ws

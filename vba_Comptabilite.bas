@@ -411,7 +411,7 @@ Public Sub Ouvrir_PDF_Ligne()
     ' Colonne J = 10 = Lien_PDF
     Dim ligneActive As Long
     ligneActive = ActiveCell.Row
-    If ligneActive <= 1 Then
+    If ligneActive <= 2 Then
         MsgBox "Cliquez d'abord sur une ligne de données.", vbInformation, "Sélection"
         Exit Sub
     End If
@@ -464,7 +464,7 @@ Public Sub MettreAJourStatut()
 
     Dim ligne As Long
     ligne = ActiveCell.Row
-    If ligne <= 1 Or Trim(CStr(ws.Cells(ligne, 1).Value)) = "" Then
+    If ligne <= 2 Or Trim(CStr(ws.Cells(ligne, 1).Value)) = "" Then
         MsgBox "S" & Chr(233) & "lectionnez d'abord une ligne de donn" & Chr(233) & "es.", _
                vbInformation, "S" & Chr(233) & "lection"
         Exit Sub
@@ -476,9 +476,9 @@ Public Sub MettreAJourStatut()
     Dim rep As Integer
     rep = MsgBox("Facture : " & numFacture & vbCrLf & _
                  "Statut actuel : " & statutActuel & vbCrLf & vbCrLf & _
-                 "[Oui]     " & Chr(8594) & " Marquer comme Pay" & Chr(233) & vbCrLf & _
-                 "[Non]     " & Chr(8594) & " Autre statut" & vbCrLf & _
-                 "[Annuler] " & Chr(8594) & " Ne rien changer", _
+                 "[Oui]     " & ChrW(8594) & " Marquer comme Pay" & Chr(233) & vbCrLf & _
+                 "[Non]     " & ChrW(8594) & " Autre statut" & vbCrLf & _
+                 "[Annuler] " & ChrW(8594) & " Ne rien changer", _
                  vbQuestion + vbYesNoCancel, "Statut paiement")
 
     If rep = vbCancel Then Exit Sub
@@ -551,9 +551,9 @@ End Sub
 
 Private Sub ColoriserLignesDB(ws As Worksheet)
     Dim der As Long : der = DerniereLigne(ws)
-    If der <= 1 Then Exit Sub
+    If der <= 2 Then Exit Sub
     Dim i As Long
-    For i = 2 To der
+    For i = 3 To der
         If Trim(CStr(ws.Cells(i, 1).Value)) <> "" Then
             ColoriserLigne ws, i
         End If
@@ -577,7 +577,7 @@ Public Sub GenererRelance()
 
     Dim ligne As Long
     ligne = ActiveCell.Row
-    If ligne <= 1 Or Trim(CStr(ws.Cells(ligne, 1).Value)) = "" Then
+    If ligne <= 2 Or Trim(CStr(ws.Cells(ligne, 1).Value)) = "" Then
         MsgBox "S" & Chr(233) & "lectionnez d'abord une ligne de donn" & Chr(233) & "es.", _
                vbInformation, "S" & Chr(233) & "lection"
         Exit Sub
@@ -651,7 +651,7 @@ Private Function HtmlRelance(nomClient As String, numFacture As String, _
                               dateFacture As String, montantTTC As Double, _
                               nbRel As Long) As String
     Dim montantStr As String
-    montantStr = Replace(Format(montantTTC, "0.00"), ".", ",") & " " & Chr(8364)
+    montantStr = Replace(Format(montantTTC, "0.00"), ".", ",") & " " & ChrW(8364)
     Dim dateAujourd As String : dateAujourd = Format(Date, "DD/MM/YYYY")
 
     Dim objet As String, intro As String, corps As String, conclusion As String
@@ -775,7 +775,7 @@ Private Function CsvLignesFeuille(nomFeuille As String, typeDoc As String, SEP A
     Dim der As Long : der = DerniereLigne(ws)
     Dim result As String : result = ""
     Dim i As Long
-    For i = 2 To der
+    For i = 3 To der
         If Trim(CStr(ws.Cells(i, 1).Value)) <> "" Then
             result = result & _
                 typeDoc & SEP & _
@@ -983,7 +983,7 @@ Private Function GenererID(ws As Worksheet, prefixe As String) As String
     der = DerniereLigne(ws)
     Dim annee As String
     annee = CStr(Year(Now))
-    If der <= 1 Then
+    If der <= 2 Then
         GenererID = prefixe & annee & "-0001"
     Else
         GenererID = prefixe & annee & "-" & Format(der, "0000")
