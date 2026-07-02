@@ -194,7 +194,7 @@ def generer():
 
     pdf.set_font(FONT, '', 11)
     pdf.set_text_color(*C_TEXTE)
-    pdf.cell(210, 8, 'Import PDF automatique  •  TVA mensuelle  •  Tableaux de bord',
+    pdf.cell(210, 8, 'Import PDF  •  Relances clients  •  TVA mensuelle  •  Tableaux de bord',
              align='C', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     # Version et date
@@ -238,12 +238,13 @@ def generer():
         ("5",  "Base de données Fournisseurs",            "5"),
         ("6",  "Base de données Clients",                 "6"),
         ("7",  "Gestion du statut de paiement",          "6"),
-        ("8",  "Export CSV comptable",                   "7"),
-        ("9",  "Calcul de TVA mensuelle",                "7"),
-        ("10", "Tableaux de bord analytiques",           "8"),
-        ("11", "Taux de TVA français",                   "9"),
-        ("12", "Limites et conseils",                    "9"),
-        ("13", "Soutenir le projet",                     "10"),
+        ("8",  "Relances clients",                        "7"),
+        ("9",  "Export CSV comptable",                   "8"),
+        ("10", "Calcul de TVA mensuelle",                "8"),
+        ("11", "Tableaux de bord analytiques",           "9"),
+        ("12", "Taux de TVA français",                   "10"),
+        ("13", "Limites et conseils",                    "10"),
+        ("14", "Soutenir le projet",                     "11"),
     ]
     for num, titre, page in chapitres:
         pdf.set_font(FONT, 'B', 10)
@@ -281,6 +282,7 @@ def generer():
         "Import et extraction automatique de données depuis des factures PDF",
         "Base de données Fournisseurs et Clients (jusqu'à 2000 entrées chacune)",
         "Gestion du statut de paiement avec colorisation automatique des lignes",
+        "Génération de lettres de relance clients (1re, 2e relance, mise en demeure)",
         "Export CSV comptable (compatible Excel, Sage, EBP, Cegid)",
         "Calcul automatique de la TVA mensuelle et du solde cumulé",
         "Tableaux de bord avec graphiques (CA, dépenses, TVA)",
@@ -418,6 +420,7 @@ def generer():
         ("Date_Import",      "Date d'enregistrement dans le logiciel"),
         ("Source_Extraction","Manuel ou Automatique"),
         ("Date_Règlement",   "Date effective du paiement (renseignée via le bouton Statut paiement)"),
+        ("Nb_Relances",      "Nombre de lettres de relance générées (Clients_DB uniquement)"),
     ]
     for col, desc in cols_fourn:
         pdf.puce(f"{col} : {desc}")
@@ -439,6 +442,8 @@ def generer():
     pdf.puce("Les montants des Clients contribuent à la TVA collectée dans le calcul TVA.")
     pdf.puce("Les montants des Fournisseurs contribuent à la TVA déductible.")
     pdf.puce("Le solde TVA à payer = TVA collectée (Clients) − TVA déductible (Fournisseurs).")
+    pdf.puce("La colonne Nb_Relances (col. 15) comptabilise les lettres de relance générées.")
+    pdf.puce("Trois boutons sont disponibles sur Clients_DB : Ouvrir PDF, Statut paiement, Relance.")
 
     # ── Section 7 : Statut paiement ──────────────────────────────────────────
     pdf.add_page()
@@ -495,8 +500,77 @@ def generer():
         couleur_titre=C_ORANGE
     )
 
-    # ── Section 8 : Export CSV ───────────────────────────────────────────────
-    pdf.titre_section("8", "Export CSV comptable", C_VERT)
+    # ── Section 8 : Relances clients ─────────────────────────────────────────
+    pdf.add_page()
+    pdf.titre_section("8", "Relances clients", C_ROUGE)
+    pdf.paragraphe(
+        "Le bouton rouge Relance, disponible uniquement sur la feuille Clients_DB, "
+        "génère automatiquement une lettre de relance professionnelle au format HTML "
+        "pour toute facture dont le statut est En retard. "
+        "La lettre s'ouvre dans votre navigateur par défaut pour impression ou enregistrement en PDF."
+    )
+
+    pdf.sous_titre("Procédure de relance")
+    for i, e in enumerate([
+        "Ouvrez la feuille Clients_DB",
+        "Vérifiez que la facture concernée est en statut En retard (sinon, utilisez "
+        "le bouton Statut paiement pour le modifier)",
+        "Cliquez sur la ligne de la facture à relancer",
+        "Cliquez sur le bouton rouge Relance",
+        "La lettre HTML s'ouvre dans votre navigateur — imprimez-la ou enregistrez-la en PDF",
+        "Le compteur Nb_Relances de la ligne est automatiquement incrémenté",
+    ], 1):
+        pdf.etape(i, e)
+    pdf.ln(2)
+
+    pdf.sous_titre("Niveaux de relance")
+    niveaux = [
+        ("1re relance",    "Rappel courtois — ton professionnel et bienveillant"),
+        ("2e relance",     "Demande ferme — délai de 8 jours ouvrables"),
+        ("3e relance et+", "Mise en demeure — mention de recouvrement judiciaire"),
+    ]
+    cols_r = [38, 132]
+    hdrs_r = ["Niveau", "Tonalité"]
+    pdf.set_font(FONT, 'B', 9)
+    pdf.set_fill_color(*C_BLEU)
+    pdf.set_text_color(*C_BLANC)
+    for w, h in zip(cols_r, hdrs_r):
+        pdf.cell(w, 6, f'  {h}', fill=True, border=1)
+    pdf.ln()
+    pdf.set_font(FONT, '', 9)
+    pdf.set_text_color(*C_TEXTE)
+    for i, (niv, ton) in enumerate(niveaux):
+        bg = C_GRIS if i % 2 == 0 else C_BLANC
+        pdf.set_fill_color(*bg)
+        pdf.cell(cols_r[0], 6, f'  {niv}', fill=True, border=1)
+        pdf.cell(cols_r[1], 6, f'  {ton}', fill=True, border=1)
+        pdf.ln()
+    pdf.ln(3)
+
+    pdf.encadre(
+        "Contenu de la lettre de relance",
+        "  Chaque lettre inclut automatiquement :\n"
+        "  - En-tête EasyCompta avec la date du jour\n"
+        "  - Nom du client et objet de la relance\n"
+        "  - Tableau récapitulatif : N° facture, date d'émission, montant TTC\n"
+        "  - Corps du texte adapté au niveau de relance\n"
+        "  - Signature et pied de page avec la version du logiciel\n\n"
+        "  Le fichier HTML est créé dans le dossier temporaire (%TEMP%) et s'ouvre\n"
+        "  automatiquement. Il peut être imprimé ou exporté en PDF depuis le navigateur\n"
+        "  (Ctrl+P → Enregistrer en PDF).",
+        couleur_titre=C_ROUGE
+    )
+
+    pdf.encadre(
+        "Remarque",
+        "  La relance ne fonctionne que sur les factures En retard.\n"
+        "  Elle n'est pas disponible sur Fournisseurs_DB (uniquement Clients_DB).\n"
+        "  Le compteur Nb_Relances reste modifiable manuellement dans la colonne O.",
+        couleur_titre=C_ORANGE
+    )
+
+    # ── Section 9 : Export CSV ───────────────────────────────────────────────
+    pdf.titre_section("9", "Export CSV comptable", C_VERT)
     pdf.paragraphe(
         "Le bouton vert Exporter CSV, situé sur la feuille TVA_Mensuelle, génère un fichier "
         "CSV contenant l'ensemble des factures fournisseurs et clients. Ce fichier est "
@@ -525,9 +599,9 @@ def generer():
         couleur_titre=C_VERT
     )
 
-    # ── Section 9 : TVA ──────────────────────────────────────────────────────
+    # ── Section 10 : TVA ─────────────────────────────────────────────────────
     pdf.add_page()
-    pdf.titre_section("9", "Calcul de TVA mensuelle", C_ROUGE)
+    pdf.titre_section("10", "Calcul de TVA mensuelle", C_ROUGE)
     pdf.paragraphe(
         "La feuille TVA_Mensuelle calcule automatiquement la TVA à déclarer chaque mois, "
         "en agrégeant les données de Fournisseurs_DB et Clients_DB."
@@ -558,8 +632,8 @@ def generer():
         couleur_titre=C_ROUGE
     )
 
-    # ── Section 8 : Tableaux de bord ─────────────────────────────────────────
-    pdf.titre_section("10", "Tableaux de bord analytiques", C_VERT)
+    # ── Section 11 : Tableaux de bord ────────────────────────────────────────
+    pdf.titre_section("11", "Tableaux de bord analytiques", C_VERT)
     pdf.paragraphe(
         "La feuille Pivot_Analytics offre une vue graphique de l'activité annuelle. "
         "Elle se synchronise avec l'année choisie dans TVA_Mensuelle (cellule B3)."
@@ -592,9 +666,9 @@ def generer():
         couleur_titre=C_VERT
     )
 
-    # ── Section 9 : Taux TVA ─────────────────────────────────────────────────
+    # ── Section 12 : Taux TVA ────────────────────────────────────────────────
     pdf.add_page()
-    pdf.titre_section("11", "Taux de TVA français", C_ORANGE)
+    pdf.titre_section("12", "Taux de TVA français", C_ORANGE)
     pdf.paragraphe(
         "Le logiciel gère les quatre taux de TVA en vigueur en France métropolitaine."
     )
@@ -608,8 +682,8 @@ def generer():
         couleur_titre=C_ORANGE
     )
 
-    # ── Section 10 : Limites ─────────────────────────────────────────────────
-    pdf.titre_section("12", "Limites et conseils", C_ROUGE)
+    # ── Section 13 : Limites ─────────────────────────────────────────────────
+    pdf.titre_section("13", "Limites et conseils", C_ROUGE)
 
     pdf.sous_titre("Extraction PDF automatique")
     for l in [
@@ -640,8 +714,8 @@ def generer():
         couleur_titre=C_VERT
     )
 
-    # ── Section 11 : Soutenir ────────────────────────────────────────────────
-    pdf.titre_section("13", "Soutenir le projet", C_ORANGE)
+    # ── Section 14 : Soutenir ────────────────────────────────────────────────
+    pdf.titre_section("14", "Soutenir le projet", C_ORANGE)
     pdf.paragraphe(
         "EasyCompta est un logiciel entièrement gratuit, développé et maintenu "
         "bénévolement. Si il vous fait gagner du temps et vous est utile au quotidien, "
